@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Enums\QuoteRequestStatus;
+use App\Filament\Resources\QuoteRequestResource\Pages;
+use App\Models\QuoteRequest;
+use App\Support\Permissions;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\HtmlString;
+
+class QuoteRequestResource extends Resource
+{
+    protected static ?string $model = QuoteRequest::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-document-currency-dollar';
+
+    protected static ?string $navigationGroup = 'Talepler';
+
+    protected static ?string $navigationLabel = 'Teklif Talepleri';
+
+    protected static ?string $modelLabel = 'Teklif Talebi';
+
+    protected static ?int $navigationSort = 2;
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Section::make('Talep Sahibi')
+                ->columns(2)
+                ->schema([
+                    Placeholder::make('name')->label('Ad Soyad')->content(fn (QuoteRequest $record) => $record->name),
+                    Placeholder::make('company')->label('Firma')->content(fn (QuoteRequest $record) => $record->company ?? '-'),
+                    Placeholder::make('email')->label('E-posta')->content(fn (QuoteRequest $record) => $record->email),
+                    Placeholder::make('phone')->label('Telefon')->content(fn (QuoteRequest $record) => $record->phone),
+                    Placeholder::make('country')->label('Ülke')->content(fn (QuoteRequest $record) => $record->country ?? '-'),
+                    Placeholder::make('city')->label('Şehir')->content(fn (QuoteRequest $record) => $record->city ?? '-'),
+                    Placeholder::make('product_interest')->label('İlgilendiği Ürün')->content(fn (QuoteRequest $record) => $record->product_interest ?? '-'),
+                    Placeholder::make('uploaded_file')->label('Ek Dosya')
+                        ->content(fn (QuoteRequest $record) => $record->uploaded_file
+                            ? new HtmlString('<a class="underline text-primary-600" href="'.Storage::disk('public')->url($record->uploaded_file).'" target="_blank">Dosyayı Görüntüle</a>')
+                            : '-'),
+                ]),
+            Section::make('Mesaj')
+                ->schema([
+                    Placeholder::make('message')->label('')->content(fn (QuoteRequest $record) => $record->message),
+                ]),
+            Section::make('Yönetim')
+                ->columns(2)
+                ->schema([
+                    Select::make('status')
+                        ->label('Durum')
+                        ->options(collect(QuoteRequestStatus::cases())->mapWithKeys(fn ($c) => [$c->value => $c->getLabel()]))
+                        ->required(),
+                    Textarea::make('admin_note')->label('Not')->rows(4)->columnSpanFull(),
+                ]),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('created_at')->label('Tarih')->dateTime('d.m.Y H:i')->sortable(),
+                TextColumn::make('name')->label('Ad Soyad')->searchable(),
+                TextColumn::make('company')->label('Firma')->searchable(),
+                TextColumn::make('product_interest')->label('İlgilendiği Ürün')->limit(30),
+                BadgeColumn::make('status')->label('Durum'),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->filters([
+                SelectFilter::make('status')
+                    ->options(collect(QuoteRequestStatus::cases())->mapWithKeys(fn ($c) => [$c->value => $c->getLabel()])),
+            ])
+            ->actions([EditAction::make()])
+            ->bulkActions([DeleteBulkAction::make()])
+            ->searchable();
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListQuoteRequests::route('/'),
+            'edit' => Pages\EditQuoteRequest::route('/{record}/edit'),
+        ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can(Permissions::VIEW_QUOTE_REQUESTS) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) QuoteRequest::where('status', QuoteRequestStatus::New)->count() ?: null;
+    }
+}

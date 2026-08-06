@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Enums\ContactMessageStatus;
+use App\Filament\Resources\ContactMessageResource\Pages;
+use App\Models\ContactMessage;
+use App\Support\Permissions;
+use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+
+class ContactMessageResource extends Resource
+{
+    protected static ?string $model = ContactMessage::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-envelope';
+
+    protected static ?string $navigationGroup = 'Talepler';
+
+    protected static ?string $navigationLabel = 'İletişim Mesajları';
+
+    protected static ?string $modelLabel = 'İletişim Mesajı';
+
+    protected static ?int $navigationSort = 1;
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Section::make('Gönderen')
+                ->columns(2)
+                ->schema([
+                    Placeholder::make('name')->label('Ad Soyad')->content(fn (ContactMessage $record) => $record->name),
+                    Placeholder::make('email')->label('E-posta')->content(fn (ContactMessage $record) => $record->email),
+                    Placeholder::make('phone')->label('Telefon')->content(fn (ContactMessage $record) => $record->phone ?? '-'),
+                    Placeholder::make('company')->label('Firma')->content(fn (ContactMessage $record) => $record->company ?? '-'),
+                    Placeholder::make('source_page')->label('Kaynak Sayfa')->content(fn (ContactMessage $record) => $record->source_page ?? '-'),
+                    Placeholder::make('subject')->label('Konu')->content(fn (ContactMessage $record) => $record->subject ?? '-'),
+                ]),
+            Section::make('Mesaj')
+                ->schema([
+                    Placeholder::make('message')->label('')->content(fn (ContactMessage $record) => $record->message),
+                ]),
+            Section::make('Yönetim')
+                ->columns(2)
+                ->schema([
+                    Select::make('status')
+                        ->label('Durum')
+                        ->options(collect(ContactMessageStatus::cases())->mapWithKeys(fn ($c) => [$c->value => $c->getLabel()]))
+                        ->required(),
+                    Textarea::make('admin_note')->label('Not')->rows(4)->columnSpanFull(),
+                ]),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('created_at')->label('Tarih')->dateTime('d.m.Y H:i')->sortable(),
+                TextColumn::make('name')->label('Ad Soyad')->searchable(),
+                TextColumn::make('email')->label('E-posta')->searchable(),
+                TextColumn::make('subject')->label('Konu')->limit(30),
+                BadgeColumn::make('status')->label('Durum'),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->filters([
+                SelectFilter::make('status')
+                    ->options(collect(ContactMessageStatus::cases())->mapWithKeys(fn ($c) => [$c->value => $c->getLabel()])),
+            ])
+            ->actions([
+                EditAction::make(),
+                Action::make('markRead')
+                    ->label('Okundu İşaretle')
+                    ->icon('heroicon-o-check')
+                    ->visible(fn (ContactMessage $record) => $record->status === ContactMessageStatus::New)
+                    ->action(fn (ContactMessage $record) => $record->update(['status' => ContactMessageStatus::Read])),
+            ])
+            ->bulkActions([DeleteBulkAction::make()]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListContactMessages::route('/'),
+            'edit' => Pages\EditContactMessage::route('/{record}/edit'),
+        ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can(Permissions::VIEW_CONTACT_MESSAGES) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) ContactMessage::where('status', ContactMessageStatus::New)->count() ?: null;
+    }
+}

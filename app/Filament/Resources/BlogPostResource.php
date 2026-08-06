@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\BlogPostResource\Pages;
+use App\Models\BlogCategory;
+use App\Models\BlogPost;
+use App\Support\Permissions;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Form;
+use Filament\Resources\Concerns\Translatable;
+use Filament\Resources\Resource;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class BlogPostResource extends Resource
+{
+    use Translatable;
+
+    protected static ?string $model = BlogPost::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-newspaper';
+
+    protected static ?string $navigationGroup = 'İçerik Yönetimi';
+
+    protected static ?string $navigationLabel = 'Blog Yazıları';
+
+    protected static ?string $modelLabel = 'Blog Yazısı';
+
+    protected static ?int $navigationSort = 2;
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([
+            Section::make('İçerik')
+                ->columns(2)
+                ->schema([
+                    Select::make('blog_category_id')
+                        ->label('Kategori')
+                        ->options(fn () => BlogCategory::query()->ordered()->get()->pluck('name', 'id'))
+                        ->searchable()
+                        ->required()
+                        ->columnSpanFull(),
+                    TextInput::make('title')->label('Başlık')->required()->maxLength(200)->columnSpanFull(),
+                    TextInput::make('slug')->label('Slug')->maxLength(220)->unique(ignoreRecord: true),
+                    TextInput::make('author_name')->label('Yazar'),
+                    Textarea::make('excerpt')->label('Özet')->rows(3)->columnSpanFull(),
+                    RichEditor::make('content')->label('İçerik')->columnSpanFull(),
+                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('blog/cover')->columnSpanFull(),
+                ]),
+            Section::make('Yayın')
+                ->columns(3)
+                ->schema([
+                    DateTimePicker::make('published_at')->label('Yayın Tarihi'),
+                    TextInput::make('reading_time')->label('Okuma Süresi (dk)')->numeric(),
+                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
+                    Toggle::make('is_active')->label('Aktif')->default(true),
+                    Toggle::make('is_featured')->label('Öne Çıkan'),
+                ]),
+            ...BlogPost::seoFormSchema(),
+        ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                ImageColumn::make('cover_image')->label('Görsel')->square(),
+                TextColumn::make('title')->label('Başlık')->searchable()->sortable(),
+                TextColumn::make('category.name')->label('Kategori')->sortable(),
+                TextColumn::make('author_name')->label('Yazar'),
+                TextColumn::make('published_at')->label('Yayın Tarihi')->dateTime('d.m.Y H:i')->sortable(),
+                IconColumn::make('is_featured')->label('Öne Çıkan')->boolean(),
+                IconColumn::make('is_active')->label('Aktif')->boolean(),
+            ])
+            ->defaultSort('published_at', 'desc')
+            ->filters([
+                SelectFilter::make('blog_category_id')->label('Kategori')
+                    ->options(fn () => BlogCategory::query()->ordered()->get()->pluck('name', 'id')),
+                TernaryFilter::make('is_active')->label('Aktif mi?'),
+                TernaryFilter::make('is_featured')->label('Öne Çıkan mı?'),
+            ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListBlogPosts::route('/'),
+            'create' => Pages\CreateBlogPost::route('/create'),
+            'edit' => Pages\EditBlogPost::route('/{record}/edit'),
+        ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can(Permissions::MANAGE_BLOG) ?? false;
+    }
+}
