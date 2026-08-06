@@ -11,7 +11,6 @@
         "laravel/tinker": "^2.9",
         "filament/filament": "^3.3",
         "filament/spatie-laravel-media-library-plugin": "^3.3",
-        "filament/spatie-laravel-translatable-plugin": "^3.3",
         "spatie/laravel-permission": "^6.9",
         "spatie/laravel-medialibrary": "^11.9",
         "spatie/laravel-translatable": "^6.11",
