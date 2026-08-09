@@ -25,7 +25,7 @@ class ProductCategorySeeder extends Seeder
             $category->name = $names;
             $category->is_active = true;
             $category->is_featured = $index < 4;
-            $category->sort_order = $index;
+            $category->sort_order = $index + 1;
             $category->save();
         }
     }

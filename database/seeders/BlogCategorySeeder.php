@@ -20,7 +20,7 @@ class BlogCategorySeeder extends Seeder
             $category = BlogCategory::query()->firstOrNew(['slug' => Str::slug($names['tr'])]);
             $category->name = $names;
             $category->is_active = true;
-            $category->sort_order = $index;
+            $category->sort_order = $index + 1;
             $category->save();
         }
     }

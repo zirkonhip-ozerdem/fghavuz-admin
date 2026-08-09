@@ -22,7 +22,7 @@ class ReferenceProjectSeeder extends Seeder
             $project->location = $data['location'];
             $project->is_active = true;
             $project->is_featured = true;
-            $project->sort_order = $index;
+            $project->sort_order = $index + 1;
             $project->save();
         }
     }

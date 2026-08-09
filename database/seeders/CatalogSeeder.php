@@ -29,7 +29,7 @@ class CatalogSeeder extends Seeder
             $catalog->title = $names;
             $catalog->file = $path;
             $catalog->is_active = true;
-            $catalog->sort_order = $index;
+            $catalog->sort_order = $index + 1;
             $catalog->save();
         }
     }
