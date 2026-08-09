@@ -13,7 +13,6 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
@@ -51,7 +50,6 @@ class CatalogResource extends Resource
                         ->maxSize((int) env('MEDIA_MAX_DOCUMENT_SIZE', 20480))
                         ->required()
                         ->columnSpanFull(),
-                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('catalogs/cover')->columnSpanFull(),
                 ]),
             Section::make('Yayın')
                 ->columns(2)
@@ -67,7 +65,6 @@ class CatalogResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('cover_image')->label('Kapak')->square(),
                 TextColumn::make('title')->label('Başlık')->searchable()->sortable(),
                 TextColumn::make('file_type')->label('Tür'),
                 TextColumn::make('file_size')->label('Boyut')->formatStateUsing(fn ($state) => $state ? number_format($state / 1024, 0).' KB' : '-'),
