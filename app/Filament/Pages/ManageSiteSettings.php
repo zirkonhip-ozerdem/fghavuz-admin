@@ -9,7 +9,6 @@ use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -29,6 +28,8 @@ class ManageSiteSettings extends Page implements HasForms
     protected static ?string $navigationGroup = 'Sistem';
 
     protected static ?string $navigationLabel = 'Site Ayarları';
+
+    protected static ?string $title = 'Site Ayarları';
 
     protected static ?int $navigationSort = 1;
 
@@ -62,9 +63,7 @@ class ManageSiteSettings extends Page implements HasForms
                     TextInput::make('site_name')->label('Site Adı')->required(),
                     TextInput::make('copyright_text')->label('Copyright Metni'),
                     FileUpload::make('logo')->label('Logo')->image()->directory('site/branding'),
-                    FileUpload::make('dark_logo')->label('Koyu Tema Logo')->image()->directory('site/branding'),
                     FileUpload::make('favicon')->label('Favicon')->image()->directory('site/branding'),
-                    FileUpload::make('footer_logo')->label('Footer Logo')->image()->directory('site/branding'),
                 ]),
             Section::make('İletişim')
                 ->columns(2)
@@ -79,25 +78,16 @@ class ManageSiteSettings extends Page implements HasForms
                 ->columns(3)
                 ->schema([
                     TextInput::make('instagram_url')->label('Instagram')->url(),
-                    TextInput::make('linkedin_url')->label('LinkedIn')->url(),
-                    TextInput::make('facebook_url')->label('Facebook')->url(),
                 ]),
-            Section::make('Dil ve Bakım')
+            Section::make('Dil')
                 ->columns(2)
                 ->schema([
                     TextInput::make('default_locale')->label('Varsayılan Dil')->default('tr')->required(),
-                    Toggle::make('maintenance_mode')->label('Bakım Modu'),
                     KeyValue::make('footer_text')
                         ->label('Footer Metni (dil bazlı)')
                         ->keyLabel('Dil (tr/en/ar)')
                         ->valueLabel('Metin')
                         ->columnSpanFull(),
-                ]),
-            Section::make('Diğer Bağlantılar')
-                ->columns(2)
-                ->schema([
-                    TextInput::make('yengec_yazilim_url')->label('Yengeç Yazılım URL')->url(),
-                    TextInput::make('yna_ekibi_url')->label('YNA Ekibi URL')->url(),
                 ]),
         ])->statePath('data');
     }

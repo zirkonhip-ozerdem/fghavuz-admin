@@ -26,7 +26,8 @@ class FilamentAdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path(env('FILAMENT_PATH', 'admin'))
             ->login()
-            ->brandName('FGPOOL / Poolux Admin')
+            ->brandLogo(asset('img/logo.png'))
+            ->brandLogoHeight('1.75rem')
             ->colors([
                 'primary' => Color::hex('#0f6fa3'),
             ])

@@ -29,7 +29,6 @@ class SiteSetting extends Model
         'facebook_url',
         'default_locale',
         'active_locales',
-        'maintenance_mode',
         'footer_text',
         'copyright_text',
         'yengec_yazilim_url',
@@ -42,7 +41,6 @@ class SiteSetting extends Model
     {
         return [
             'active_locales' => 'array',
-            'maintenance_mode' => 'boolean',
         ];
     }
 
