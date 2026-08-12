@@ -16,8 +16,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BlogCategoryResource extends Resource
 {
@@ -49,7 +47,7 @@ class BlogCategoryResource extends Resource
                 ->columns(2)
                 ->schema([
                     Toggle::make('is_active')->label('Aktif')->default(true),
-                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
+                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
             ...BlogCategory::seoFormSchema(),
         ]);
@@ -66,11 +64,6 @@ class BlogCategoryResource extends Resource
             ])
             ->defaultSort('sort_order')
             ->filters([TernaryFilter::make('is_active')->label('Aktif mi?')]);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getPages(): array

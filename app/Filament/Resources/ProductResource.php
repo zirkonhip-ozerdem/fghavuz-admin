@@ -25,8 +25,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductResource extends Resource
 {
@@ -121,7 +119,7 @@ class ProductResource extends Resource
                 ->schema([
                     Toggle::make('is_active')->label('Aktif')->default(true),
                     Toggle::make('is_featured')->label('Öne Çıkan'),
-                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
+                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
             ...Product::seoFormSchema(),
         ]);
@@ -147,11 +145,6 @@ class ProductResource extends Resource
                 TernaryFilter::make('is_active')->label('Aktif mi?'),
                 TernaryFilter::make('is_featured')->label('Öne Çıkan mı?'),
             ]);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getPages(): array

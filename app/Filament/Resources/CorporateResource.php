@@ -52,13 +52,6 @@ class CorporateResource extends Resource
                     Textarea::make('mission')->label('Misyon')->rows(4),
                     Textarea::make('vision')->label('Vizyon')->rows(4),
                 ]),
-            Section::make('Değerler')
-                ->schema([
-                    Repeater::make('values')
-                        ->label('Değerler')
-                        ->simple(TextInput::make('value')->label('Değer')->required())
-                        ->addActionLabel('Değer Ekle'),
-                ]),
             Section::make('Kilometre Taşları / Zaman Çizelgesi')
                 ->schema([
                     Repeater::make('milestones')
@@ -82,7 +75,7 @@ class CorporateResource extends Resource
                 ->columns(2)
                 ->schema([
                     Toggle::make('is_active')->label('Aktif')->default(true),
-                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
+                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
             ...Corporate::seoFormSchema(),
         ]);

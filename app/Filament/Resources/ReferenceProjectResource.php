@@ -18,8 +18,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ReferenceProjectResource extends Resource
 {
@@ -54,7 +52,7 @@ class ReferenceProjectResource extends Resource
                 ->schema([
                     Toggle::make('is_active')->label('Aktif')->default(true),
                     Toggle::make('is_featured')->label('Öne Çıkan'),
-                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
+                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
         ]);
     }
@@ -75,11 +73,6 @@ class ReferenceProjectResource extends Resource
                 TernaryFilter::make('is_active')->label('Aktif mi?'),
                 TernaryFilter::make('is_featured')->label('Öne Çıkan mı?'),
             ]);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getPages(): array

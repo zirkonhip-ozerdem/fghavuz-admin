@@ -23,8 +23,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class BlogPostResource extends Resource
 {
@@ -65,8 +63,7 @@ class BlogPostResource extends Resource
                 ->columns(3)
                 ->schema([
                     DateTimePicker::make('published_at')->label('Yayın Tarihi'),
-                    TextInput::make('reading_time')->label('Okuma Süresi (dk)')->numeric(),
-                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
+                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                     Toggle::make('is_active')->label('Aktif')->default(true),
                     Toggle::make('is_featured')->label('Öne Çıkan'),
                 ]),
@@ -93,11 +90,6 @@ class BlogPostResource extends Resource
                 TernaryFilter::make('is_active')->label('Aktif mi?'),
                 TernaryFilter::make('is_featured')->label('Öne Çıkan mı?'),
             ]);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getPages(): array

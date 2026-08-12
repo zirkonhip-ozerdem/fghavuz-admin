@@ -21,8 +21,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProductSubcategoryResource extends Resource
 {
@@ -62,7 +60,7 @@ class ProductSubcategoryResource extends Resource
                 ->columns(2)
                 ->schema([
                     Toggle::make('is_active')->label('Aktif')->default(true),
-                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
+                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
             ...ProductSubcategory::seoFormSchema(),
         ]);
@@ -85,11 +83,6 @@ class ProductSubcategoryResource extends Resource
                     ->options(fn () => ProductCategory::query()->ordered()->get()->pluck('name', 'id')),
                 TernaryFilter::make('is_active')->label('Aktif mi?'),
             ]);
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
     }
 
     public static function getPages(): array
