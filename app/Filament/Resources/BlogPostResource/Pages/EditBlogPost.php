@@ -3,19 +3,18 @@
 namespace App\Filament\Resources\BlogPostResource\Pages;
 
 use App\Filament\Resources\BlogPostResource;
+use App\Filament\Resources\Concerns\PacksTranslatableFieldsOnEdit;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 
 class EditBlogPost extends EditRecord
 {
-    use Translatable;
+    use PacksTranslatableFieldsOnEdit;
 
     protected static string $resource = BlogPostResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [LocaleSwitcher::make(), DeleteAction::make()];
+        return [DeleteAction::make()];
     }
 }

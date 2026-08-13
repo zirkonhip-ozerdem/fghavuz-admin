@@ -16,14 +16,14 @@ class Corporate extends Model
 
     protected $fillable = [
         'title', 'subtitle', 'description', 'story_sections', 'mission', 'vision',
-        'values', 'milestones', 'video_url', 'video_media', 'image',
+        'values', 'milestones', 'video_url', 'video_media', 'image', 'image_alt',
         'is_active', 'sort_order',
         'seo_title', 'seo_description', 'seo_keywords', 'canonical_url',
         'og_title', 'og_description', 'og_image', 'robots',
     ];
 
     public array $translatable = [
-        'title', 'subtitle', 'description', 'story_sections', 'mission', 'vision', 'values', 'milestones',
+        'title', 'subtitle', 'description', 'story_sections', 'mission', 'vision', 'values', 'milestones', 'image_alt',
     ];
 
     protected function casts(): array

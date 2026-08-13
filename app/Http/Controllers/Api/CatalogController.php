@@ -54,8 +54,10 @@ class CatalogController extends Controller
 
     private function resolve(string $slugOrId): ?Catalog
     {
+        $locale = current_api_locale();
+
         return Catalog::query()->active()
-            ->where('slug', $slugOrId)
+            ->where("slug->{$locale}", $slugOrId)
             ->orWhere(fn ($q) => is_numeric($slugOrId) ? $q->where('id', $slugOrId) : $q->whereRaw('1=0'))
             ->first();
     }

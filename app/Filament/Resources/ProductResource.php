@@ -7,17 +7,19 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductSubcategory;
 use App\Support\Permissions;
+use App\Support\Traits\HasTranslatableTabs;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
@@ -28,7 +30,7 @@ use Filament\Tables\Table;
 
 class ProductResource extends Resource
 {
-    use Translatable;
+    use HasTranslatableTabs;
 
     protected static ?string $model = Product::class;
 
@@ -66,18 +68,44 @@ class ProductResource extends Resource
                         })
                         ->searchable(),
                 ]),
-            Section::make('İçerik')
+            Section::make('Dil Bazlı İçerik')
+                ->schema([
+                    Tabs::make('Diller')
+                        ->tabs(
+                            collect(self::locales())
+                                ->map(fn (string $label, string $locale) => Tab::make($locale)
+                                    ->label($label)
+                                    ->schema([
+                                        TextInput::make("title_{$locale}")
+                                            ->label('Başlık')
+                                            ->required()
+                                            ->maxLength(180)
+                                            ->extraInputAttributes(fn (string $operation) => static::slugGeneratorAttributes($locale, $operation)),
+                                        TextInput::make("slug_{$locale}")
+                                            ->label('Slug')
+                                            ->maxLength(200)
+                                            ->unique(table: Product::class, column: "slug->{$locale}", ignoreRecord: true)
+                                            ->helperText('Otomatik doldurulur, istenirse elle değiştirilebilir.'),
+                                        Textarea::make("short_description_{$locale}")->label('Kısa Açıklama')->rows(2),
+                                        Textarea::make("description_{$locale}")->label('Açıklama')->rows(5),
+                                        Textarea::make("technical_description_{$locale}")->label('Teknik Açıklama')->rows(5),
+                                        Section::make('SEO')
+                                            ->collapsible()
+                                            ->collapsed()
+                                            ->schema(Product::translatableSeoFormSchema($locale)),
+                                    ]))
+                                ->values()
+                                ->all()
+                        ),
+                ]),
+            Section::make('Ortak Bilgiler')
                 ->columns(2)
                 ->schema([
-                    TextInput::make('title')->label('Başlık')->required()->maxLength(180)->columnSpanFull(),
-                    TextInput::make('slug')->label('Slug')->maxLength(200)->unique(ignoreRecord: true)
-                        ->helperText('Boş bırakılırsa başlıktan otomatik oluşturulur.'),
                     TextInput::make('series')->label('Seri'),
                     TextInput::make('sku')->label('SKU / Stok Kodu'),
-                    Textarea::make('short_description')->label('Kısa Açıklama')->rows(2)->columnSpanFull(),
-                    Textarea::make('description')->label('Açıklama')->rows(5)->columnSpanFull(),
-                    Textarea::make('technical_description')->label('Teknik Açıklama')->rows(5)->columnSpanFull(),
-                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('products/cover')->columnSpanFull(),
+                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('products/cover')->columnSpanFull()
+                        ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
+                        ->helperText('JPG, PNG veya WEBP yükleyin. Ürün listelerinde ve kartlarda görünecek ana görsel. Maksimum dosya boyutu: 5 MB.'),
                 ]),
             Section::make('Galeri ve Dokümanlar')
                 ->columns(1)
@@ -88,7 +116,9 @@ class ProductResource extends Resource
                         ->multiple()
                         ->image()
                         ->reorderable()
-                        ->appendFiles(),
+                        ->appendFiles()
+                        ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
+                        ->helperText('Birden fazla görsel seçebilirsiniz (JPG, PNG, WEBP). Sürükleyerek sıralayabilirsiniz. Her dosya en fazla 5 MB.'),
                     SpatieMediaLibraryFileUpload::make('documents')
                         ->label('Dokümanlar (PDF, DOC, XLS)')
                         ->collection('documents')
@@ -99,7 +129,9 @@ class ProductResource extends Resource
                             'application/vnd.ms-excel',
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         ])
-                        ->appendFiles(),
+                        ->appendFiles()
+                        ->maxSize((int) env('MEDIA_MAX_DOCUMENT_SIZE', 20480))
+                        ->helperText('PDF, Word veya Excel dosyası yükleyebilirsiniz (birden fazla seçilebilir). Her dosya en fazla 20 MB.'),
                 ]),
             Section::make('Özellikler ve Teknik Değerler')
                 ->schema([
@@ -121,7 +153,12 @@ class ProductResource extends Resource
                     Toggle::make('is_featured')->label('Öne Çıkan'),
                     TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
-            ...Product::seoFormSchema(),
+            Section::make('SEO - Ortak Alanlar')
+                ->description('Dile bağlı olmayan SEO ayarları.')
+                ->collapsible()
+                ->collapsed()
+                ->columns(2)
+                ->schema(Product::nonTranslatableSeoFormSchema()),
         ]);
     }
 

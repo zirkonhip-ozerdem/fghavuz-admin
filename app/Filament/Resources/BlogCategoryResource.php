@@ -5,12 +5,14 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BlogCategoryResource\Pages;
 use App\Models\BlogCategory;
 use App\Support\Permissions;
+use App\Support\Traits\HasTranslatableTabs;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -19,7 +21,7 @@ use Filament\Tables\Table;
 
 class BlogCategoryResource extends Resource
 {
-    use Translatable;
+    use HasTranslatableTabs;
 
     protected static ?string $model = BlogCategory::class;
 
@@ -36,12 +38,33 @@ class BlogCategoryResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Section::make('İçerik')
-                ->columns(2)
+            Section::make('Dil Bazlı İçerik')
                 ->schema([
-                    TextInput::make('name')->label('Ad')->required()->maxLength(150)->columnSpanFull(),
-                    TextInput::make('slug')->label('Slug')->maxLength(180)->unique(ignoreRecord: true),
-                    Textarea::make('description')->label('Açıklama')->rows(3)->columnSpanFull(),
+                    Tabs::make('Diller')
+                        ->tabs(
+                            collect(self::locales())
+                                ->map(fn (string $label, string $locale) => Tab::make($locale)
+                                    ->label($label)
+                                    ->schema([
+                                        TextInput::make("name_{$locale}")
+                                            ->label('Ad')
+                                            ->required()
+                                            ->maxLength(150)
+                                            ->extraInputAttributes(fn (string $operation) => static::slugGeneratorAttributes($locale, $operation)),
+                                        TextInput::make("slug_{$locale}")
+                                            ->label('Slug')
+                                            ->maxLength(180)
+                                            ->unique(table: BlogCategory::class, column: "slug->{$locale}", ignoreRecord: true)
+                                            ->helperText('Otomatik doldurulur, istenirse elle değiştirilebilir.'),
+                                        Textarea::make("description_{$locale}")->label('Açıklama')->rows(3),
+                                        Section::make('SEO')
+                                            ->collapsible()
+                                            ->collapsed()
+                                            ->schema(BlogCategory::translatableSeoFormSchema($locale)),
+                                    ]))
+                                ->values()
+                                ->all()
+                        ),
                 ]),
             Section::make('Yayın')
                 ->columns(2)
@@ -49,7 +72,12 @@ class BlogCategoryResource extends Resource
                     Toggle::make('is_active')->label('Aktif')->default(true),
                     TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
-            ...BlogCategory::seoFormSchema(),
+            Section::make('SEO - Ortak Alanlar')
+                ->description('Dile bağlı olmayan SEO ayarları.')
+                ->collapsible()
+                ->collapsed()
+                ->columns(2)
+                ->schema(BlogCategory::nonTranslatableSeoFormSchema()),
         ]);
     }
 

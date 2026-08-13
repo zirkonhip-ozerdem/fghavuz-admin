@@ -19,13 +19,14 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Product::query()->active()->ordered()->with(['category', 'subcategory']);
+        $locale = current_api_locale();
 
         if ($categorySlug = $request->query('category')) {
-            $query->whereHas('category', fn ($q) => $q->where('slug', $categorySlug));
+            $query->whereHas('category', fn ($q) => $q->where("slug->{$locale}", $categorySlug));
         }
 
         if ($subcategorySlug = $request->query('subcategory')) {
-            $query->whereHas('subcategory', fn ($q) => $q->where('slug', $subcategorySlug));
+            $query->whereHas('subcategory', fn ($q) => $q->where("slug->{$locale}", $subcategorySlug));
         }
 
         if ($request->boolean('featured')) {
@@ -33,7 +34,6 @@ class ProductController extends Controller
         }
 
         if ($search = $request->query('q')) {
-            $locale = current_api_locale();
             $query->where("title->{$locale}", 'ilike', "%{$search}%");
         }
 
@@ -57,9 +57,10 @@ class ProductController extends Controller
      */
     public function show(string $slug): JsonResponse
     {
+        $locale = current_api_locale();
         $product = Product::query()
             ->active()
-            ->where('slug', $slug)
+            ->where("slug->{$locale}", $slug)
             ->with(['category', 'subcategory'])
             ->first();
 

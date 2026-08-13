@@ -33,9 +33,10 @@ class ProductCategoryController extends Controller
      */
     public function show(string $slug): JsonResponse
     {
+        $locale = current_api_locale();
         $category = ProductCategory::query()
             ->active()
-            ->where('slug', $slug)
+            ->where("slug->{$locale}", $slug)
             ->withCount('products')
             ->with(['subcategories' => fn ($q) => $q->active()->ordered()->withCount('products')])
             ->first();

@@ -6,16 +6,19 @@ use App\Filament\Resources\BlogPostResource\Pages;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Support\Permissions;
+use App\Support\Traits\HasTranslatableTabs;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
@@ -26,7 +29,7 @@ use Filament\Tables\Table;
 
 class BlogPostResource extends Resource
 {
-    use Translatable;
+    use HasTranslatableTabs;
 
     protected static ?string $model = BlogPost::class;
 
@@ -43,7 +46,7 @@ class BlogPostResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Section::make('İçerik')
+            Section::make('Ortak Bilgiler')
                 ->columns(2)
                 ->schema([
                     Select::make('blog_category_id')
@@ -52,12 +55,45 @@ class BlogPostResource extends Resource
                         ->searchable()
                         ->required()
                         ->columnSpanFull(),
-                    TextInput::make('title')->label('Başlık')->required()->maxLength(200)->columnSpanFull(),
-                    TextInput::make('slug')->label('Slug')->maxLength(220)->unique(ignoreRecord: true),
-                    TextInput::make('author_name')->label('Yazar'),
-                    Textarea::make('excerpt')->label('Özet')->rows(3)->columnSpanFull(),
-                    RichEditor::make('content')->label('İçerik')->columnSpanFull(),
-                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('blog/cover')->columnSpanFull(),
+                    TextInput::make('author_name')->label('Yazar')->default('Admin Fatih Gül'),
+                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('blog/cover')->columnSpanFull()
+                        ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
+                        ->helperText('JPG, PNG veya WEBP yükleyin. Önerilen en-boy oranı 16:9. Maksimum dosya boyutu: 5 MB.')
+                        ->live()
+                        ->afterStateUpdated(static::imageAltAutoFillCallback('cover_image')),
+                    Grid::make(3)
+                        ->columnSpanFull()
+                        ->schema(static::imageAltFields('cover_image')),
+                ]),
+            Section::make('Dil Bazlı İçerik')
+                ->description('Her dil kendi sekmesinde: başlık, özet, içerik ve o dile ait SEO alanları bir arada.')
+                ->schema([
+                    Tabs::make('Diller')
+                        ->tabs(
+                            collect(self::locales())
+                                ->map(fn (string $label, string $locale) => Tab::make($locale)
+                                    ->label($label)
+                                    ->schema([
+                                        TextInput::make("title_{$locale}")
+                                            ->label('Başlık')
+                                            ->required()
+                                            ->maxLength(200)
+                                            ->extraInputAttributes(fn (string $operation) => static::slugGeneratorAttributes($locale, $operation)),
+                                        TextInput::make("slug_{$locale}")
+                                            ->label('Slug')
+                                            ->maxLength(220)
+                                            ->unique(table: BlogPost::class, column: "slug->{$locale}", ignoreRecord: true)
+                                            ->helperText('Otomatik doldurulur, istenirse elle değiştirilebilir.'),
+                                        Textarea::make("excerpt_{$locale}")->label('Özet')->rows(3),
+                                        RichEditor::make("content_{$locale}")->label('İçerik'),
+                                        Section::make('SEO')
+                                            ->collapsible()
+                                            ->collapsed()
+                                            ->schema(BlogPost::translatableSeoFormSchema($locale)),
+                                    ]))
+                                ->values()
+                                ->all()
+                        ),
                 ]),
             Section::make('Yayın')
                 ->columns(3)
@@ -67,7 +103,12 @@ class BlogPostResource extends Resource
                     Toggle::make('is_active')->label('Aktif')->default(true),
                     Toggle::make('is_featured')->label('Öne Çıkan'),
                 ]),
-            ...BlogPost::seoFormSchema(),
+            Section::make('SEO - Ortak Alanlar')
+                ->description('Dile bağlı olmayan SEO ayarları.')
+                ->collapsible()
+                ->collapsed()
+                ->columns(2)
+                ->schema(BlogPost::nonTranslatableSeoFormSchema()),
         ]);
     }
 

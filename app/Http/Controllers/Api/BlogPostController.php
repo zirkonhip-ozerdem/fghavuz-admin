@@ -21,7 +21,8 @@ class BlogPostController extends Controller
         $query = BlogPost::query()->active()->published()->with('category')->orderByDesc('published_at');
 
         if ($categorySlug = $request->query('category')) {
-            $query->whereHas('category', fn ($q) => $q->where('slug', $categorySlug));
+            $locale = current_api_locale();
+            $query->whereHas('category', fn ($q) => $q->where("slug->{$locale}", $categorySlug));
         }
 
         if ($request->boolean('featured')) {
@@ -52,7 +53,8 @@ class BlogPostController extends Controller
      */
     public function show(string $slug): JsonResponse
     {
-        $post = BlogPost::query()->active()->published()->where('slug', $slug)->with('category')->first();
+        $locale = current_api_locale();
+        $post = BlogPost::query()->active()->published()->where("slug->{$locale}", $slug)->with('category')->first();
 
         if (! $post) {
             return $this->fail('Blog yazısı bulunamadı.', 404);

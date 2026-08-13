@@ -27,6 +27,7 @@ class CorporateResource extends JsonResource
             'video_url' => $this->video_url,
             'video_media' => $this->video_media ? asset('storage/'.$this->video_media) : null,
             'image' => $this->image ? asset('storage/'.$this->image) : null,
+            'image_alt' => $t('image_alt'),
             'seo' => new SeoBlockResource($this->resource),
         ];
     }

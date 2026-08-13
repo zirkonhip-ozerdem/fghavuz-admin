@@ -2,20 +2,19 @@
 
 namespace App\Filament\Resources\ProductCategoryResource\Pages;
 
+use App\Filament\Resources\Concerns\PacksTranslatableFieldsOnEdit;
 use App\Filament\Resources\ProductCategoryResource;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\LocaleSwitcher;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Resources\Pages\EditRecord\Concerns\Translatable;
 
 class EditProductCategory extends EditRecord
 {
-    use Translatable;
+    use PacksTranslatableFieldsOnEdit;
 
     protected static string $resource = ProductCategoryResource::class;
 
     protected function getHeaderActions(): array
     {
-        return [LocaleSwitcher::make(), DeleteAction::make()];
+        return [DeleteAction::make()];
     }
 }

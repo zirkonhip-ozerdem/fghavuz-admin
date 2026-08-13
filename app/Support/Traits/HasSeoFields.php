@@ -84,4 +84,67 @@ trait HasSeoFields
                 ]),
         ];
     }
+
+    /**
+     * Dil bazli SEO alanlari (sekme icinde kullanim icin).
+     * Alan adlari "{alan}_{locale}" seklinde uretilir (ornek: seo_title_tr),
+     * cagiran resource kaydetme/doldurma sirasinda gercek translatable
+     * alanla (seo_title vb.) eslestirmekten sorumludur.
+     */
+    public static function translatableSeoFormSchema(string $locale): array
+    {
+        return [
+            TextInput::make("seo_title_{$locale}")
+                ->label('SEO Başlığı')
+                ->maxLength(70)
+                ->helperText('Google arama sonuclarinda mavi baslik olarak gorunecek metindir. Bos birakilirsa sayfanin kendi basligi (ad/baslik alani) kullanilir.')
+                ->columnSpanFull(),
+            Textarea::make("seo_description_{$locale}")
+                ->label('SEO Açıklaması')
+                ->maxLength(160)
+                ->rows(3)
+                ->helperText('Google arama sonucunda baslik altinda cikan kisa tanitim metnidir. 160 karakteri gecmeyecek sekilde, kisa ve merak uyandirici yazin.')
+                ->columnSpanFull(),
+            TextInput::make("seo_keywords_{$locale}")
+                ->label('Anahtar Kelimeler')
+                ->helperText('Bu icerikle ilgili kelimeleri virgulle ayirarak yazin.')
+                ->columnSpanFull(),
+            TextInput::make("og_title_{$locale}")
+                ->label('OG Başlık')
+                ->maxLength(70)
+                ->helperText('Bu sayfa WhatsApp, Facebook, Instagram gibi platformlarda paylasildiginda cikacak baslik. Bos birakilirsa "SEO Basligi" kullanilir.')
+                ->columnSpanFull(),
+            Textarea::make("og_description_{$locale}")
+                ->label('OG Açıklama')
+                ->rows(2)
+                ->helperText('Sosyal medyada paylasildiginda basligin altinda cikacak kisa aciklama. Bos birakilirsa "SEO Aciklamasi" kullanilir.')
+                ->columnSpanFull(),
+        ];
+    }
+
+    /**
+     * Dile bagli olmayan SEO alanlari (dil sekmelerinin disinda, tek sefer gosterilir).
+     */
+    public static function nonTranslatableSeoFormSchema(): array
+    {
+        return [
+            TextInput::make('canonical_url')
+                ->label('Canonical URL')
+                ->url()
+                ->helperText('Sadece bu icerige birden fazla adresten ulasilabiliyorsa doldurun. Cogu icerik icin BOS birakabilirsiniz.')
+                ->placeholder('https://siteadi.com/ornek-sayfa')
+                ->columnSpanFull(),
+            TextInput::make('robots')
+                ->label('Robots')
+                ->default('index, follow')
+                ->helperText('"index, follow" (varsayilan) = sayfa aramada gorunsun. "noindex, follow" = arama sonuclarinda GORUNMESIN.')
+                ->columnSpanFull(),
+            FileUpload::make('og_image')
+                ->label('OG Görsel (1200x630)')
+                ->image()
+                ->directory('seo/og')
+                ->helperText('Sosyal medyada paylasildiginda cikacak onizleme gorseli. En iyi sonuc icin 1200x630 piksel.')
+                ->columnSpanFull(),
+        ];
+    }
 }

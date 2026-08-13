@@ -77,7 +77,7 @@ class SeoPageResource extends Resource
                         ->helperText('"index, follow" (varsayilan) = sayfa Google\'da gorunsun. "noindex, follow" = bu sayfa aramada GORUNMESIN. Ne yaptiginizdan emin degilseniz degistirmeyin.'),
                 ]),
             Section::make('Sosyal Medya Paylaşım Görünümü')
-                ->description('Bu sayfa WhatsApp, Facebook, Instagram gibi platformlarda paylasildiginda ne gorunecegini belirler. Bos birakilirsa yukaridaki "Baslik"/"Aciklama" kullanilir.')
+                ->description('Bu sayfa Instagram gibi platformlarda paylasildiginda ne gorunecegini belirler. Bos birakilirsa yukaridaki "Baslik"/"Aciklama" kullanilir.')
                 ->columns(2)
                 ->schema([
                     TextInput::make('og_title')

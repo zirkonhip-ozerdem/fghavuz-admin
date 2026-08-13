@@ -5,13 +5,15 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CatalogResource\Pages;
 use App\Models\Catalog;
 use App\Support\Permissions;
+use App\Support\Traits\HasTranslatableTabs;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -20,7 +22,7 @@ use Filament\Tables\Table;
 
 class CatalogResource extends Resource
 {
-    use Translatable;
+    use HasTranslatableTabs;
 
     protected static ?string $model = Catalog::class;
 
@@ -37,19 +39,45 @@ class CatalogResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Section::make('İçerik')
+            Section::make('Dil Bazlı İçerik')
+                ->schema([
+                    Tabs::make('Diller')
+                        ->tabs(
+                            collect(self::locales())
+                                ->map(fn (string $label, string $locale) => Tab::make($locale)
+                                    ->label($label)
+                                    ->schema([
+                                        TextInput::make("title_{$locale}")
+                                            ->label('Başlık')
+                                            ->required()
+                                            ->maxLength(180)
+                                            ->extraInputAttributes(fn (string $operation) => static::slugGeneratorAttributes($locale, $operation)),
+                                        TextInput::make("slug_{$locale}")
+                                            ->label('Slug')
+                                            ->maxLength(200)
+                                            ->unique(table: Catalog::class, column: "slug->{$locale}", ignoreRecord: true)
+                                            ->helperText('Otomatik doldurulur, istenirse elle değiştirilebilir.'),
+                                        RichEditor::make("description_{$locale}")->label('Açıklama'),
+                                        Section::make('SEO')
+                                            ->collapsible()
+                                            ->collapsed()
+                                            ->schema(Catalog::translatableSeoFormSchema($locale)),
+                                    ]))
+                                ->values()
+                                ->all()
+                        ),
+                ]),
+            Section::make('Ortak Bilgiler')
                 ->columns(2)
                 ->schema([
-                    TextInput::make('title')->label('Başlık')->required()->maxLength(180)->columnSpanFull(),
-                    TextInput::make('slug')->label('Slug')->maxLength(200)->unique(ignoreRecord: true),
-                    Textarea::make('description')->label('Açıklama')->rows(3)->columnSpanFull(),
                     FileUpload::make('file')
                         ->label('Katalog Dosyası (PDF)')
                         ->directory('catalogs')
                         ->acceptedFileTypes(['application/pdf'])
                         ->maxSize((int) env('MEDIA_MAX_DOCUMENT_SIZE', 20480))
                         ->required()
-                        ->columnSpanFull(),
+                        ->columnSpanFull()
+                        ->helperText('Sadece PDF formatında. Maksimum dosya boyutu: 20 MB.'),
                 ]),
             Section::make('Yayın')
                 ->columns(2)
@@ -57,7 +85,12 @@ class CatalogResource extends Resource
                     Toggle::make('is_active')->label('Aktif')->default(true),
                     TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
-            ...Catalog::seoFormSchema(),
+            Section::make('SEO - Ortak Alanlar')
+                ->description('Dile bağlı olmayan SEO ayarları.')
+                ->collapsible()
+                ->collapsed()
+                ->columns(2)
+                ->schema(Catalog::nonTranslatableSeoFormSchema()),
         ]);
     }
 
