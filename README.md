@@ -33,6 +33,55 @@ Seeder sonrası panel girişi: `.env` içindeki `ADMIN_SEED_EMAIL` / `ADMIN_SEED
 
 Panel: `http://localhost:8000/admin`
 API kökü: `http://localhost:8000/api/v1`
+Health check: `http://localhost:8000/api/v1/health`
+
+## fgpool-web Bağlantı Akışı
+
+Bu repo backend/admin tarafıdır. `fgpool-web` frontend tarafı bu backend'i `/api/v1` üzerinden tüketir.
+
+### 1. Lokal test
+
+Backend:
+
+```env
+APP_URL=http://localhost:8000
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+CORS_ALLOWED_ORIGIN_PATTERNS=
+SANCTUM_STATEFUL_DOMAINS=localhost,localhost:3000,localhost:3001,127.0.0.1,127.0.0.1:3000,127.0.0.1:3001
+SESSION_DOMAIN=null
+```
+
+`fgpool-web` `.env.local`:
+
+```env
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+```
+
+### 2. Railway backend + Vercel frontend
+
+Railway backend:
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://RAILWAY-BACKEND-DOMAIN
+CORS_ALLOWED_ORIGINS=https://VERCEL-FRONTEND-DOMAIN,https://fgpool.com,https://www.fgpool.com
+CORS_ALLOWED_ORIGIN_PATTERNS=^https://fgpool-web-.*\.vercel\.app$
+SANCTUM_STATEFUL_DOMAINS=VERCEL-FRONTEND-DOMAIN,fgpool.com,www.fgpool.com
+SESSION_DOMAIN=null
+```
+
+Vercel `fgpool-web`:
+
+```env
+NEXT_PUBLIC_SITE_URL=https://VERCEL-FRONTEND-DOMAIN
+NEXT_PUBLIC_API_BASE_URL=https://RAILWAY-BACKEND-DOMAIN/api/v1
+NEXT_PUBLIC_BACKEND_URL=https://RAILWAY-BACKEND-DOMAIN
+```
+
+İlk bağlantı testi için `/api/v1/health`, içerik testi için `/api/v1/site-settings?locale=tr` kullanılabilir.
 
 Test için (PostgreSQL test veritabanı gerekir, bkz. `phpunit.xml`):
 
