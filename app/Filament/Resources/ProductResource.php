@@ -27,6 +27,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
@@ -59,7 +60,7 @@ class ProductResource extends Resource
                         ->afterStateUpdated(fn ($set) => $set('product_subcategory_id', null)),
                     Select::make('product_subcategory_id')
                         ->label('Alt Kategori')
-                        ->options(function ($get) {
+                        ->options(function (\Filament\Forms\Get $get) {
                             $categoryId = $get('product_category_id');
 
                             return $categoryId
@@ -71,8 +72,27 @@ class ProductResource extends Resource
             Section::make('İçerik')
                 ->columns(2)
                 ->schema([
-                    TextInput::make('title')->label('Başlık')->required()->maxLength(180)->columnSpanFull(),
-                    TextInput::make('slug')->label('Slug')->maxLength(200)->unique(ignoreRecord: true)
+                    TextInput::make('title')
+                        ->label('Başlık')
+                        ->required()
+                        ->maxLength(180)
+                        ->columnSpanFull()
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (?string $operation, $state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
+                            
+                            if ($operation === 'edit' && filled($get('slug'))) {
+                                return;
+                            }
+                            
+                            
+                            if ($state) {
+                                $set('slug', Str::slug($state));
+                            }
+                        }),
+                    TextInput::make('slug')
+                        ->label('Slug')
+                        ->maxLength(200)
+                        ->unique(ignoreRecord: true)
                         ->helperText('Boş bırakılırsa başlıktan otomatik oluşturulur.'),
                     TextInput::make('series')->label('Seri'),
                     TextInput::make('sku')->label('SKU / Stok Kodu'),
