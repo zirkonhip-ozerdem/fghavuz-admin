@@ -88,6 +88,8 @@ Railway ilk deploy veya migration değişikliklerinden sonra:
 php artisan migrate --force
 ```
 
+Bu repo `railway.toml` ile build/deploy komutlarını tanımlar. Railway panelindeki Build Command alanına `php artisan optimize:clear` veya `php -S ...` yazmayın; bu komutlar build aşamasında PostgreSQL'e bağlanmaya çalışıp deploy'u düşürebilir.
+
 İlk bağlantı testi için `/api/v1/health`, içerik testi için `/api/v1/site-settings?locale=tr` kullanılabilir.
 
 Test için (PostgreSQL test veritabanı gerekir, bkz. `phpunit.xml`):
