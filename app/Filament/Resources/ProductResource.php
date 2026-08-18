@@ -82,7 +82,7 @@ class ProductResource extends Resource
                                             ->label('Başlık')
                                             ->required()
                                             ->maxLength(180)
-                                            ->extraInputAttributes(fn (string $operation) => static::slugGeneratorAttributes($locale, $operation)),
+                                            ->extraInputAttributes(fn (string $operation, ?\Illuminate\Database\Eloquent\Model $record) => static::slugGeneratorAttributes($locale, $operation, $record)),
                                         TextInput::make("slug_{$locale}")
                                             ->label('Slug')
                                             ->maxLength(200)
