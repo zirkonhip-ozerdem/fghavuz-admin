@@ -219,7 +219,11 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('cover_image')->label('Görsel')->square(),
+                ImageColumn::make('cover_image')
+                    ->label('Görsel')
+                    ->disk('public')
+                    ->defaultImageUrl(static::missingImagePreviewDataUri())
+                    ->square(),
                 TextColumn::make('title')->label('Başlık')->searchable()->sortable(),
                 TextColumn::make('category.name')->label('Kategori')->sortable(),
                 TextColumn::make('subcategory.name')->label('Alt Kategori'),

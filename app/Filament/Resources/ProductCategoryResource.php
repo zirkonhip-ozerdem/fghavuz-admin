@@ -117,9 +117,8 @@ class ProductCategoryResource extends Resource
             ->columns([
                 ImageColumn::make('image')
                     ->label('Görsel')
-                    ->getStateUsing(static fn (ProductCategory $record): string => $record->image && Storage::disk('public')->exists($record->image)
-                        ? static::storagePreviewUrl($record->image)
-                        : static::missingImagePreviewDataUri())
+                    ->disk('public')
+                    ->defaultImageUrl(static::missingImagePreviewDataUri())
                     ->square(),
                 TextColumn::make('name')->label('Ad')->searchable()->sortable(),
                 TextColumn::make('subcategories_count')->label('Alt Kategori')->counts('subcategories'),
