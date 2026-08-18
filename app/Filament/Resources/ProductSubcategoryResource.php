@@ -81,7 +81,8 @@ class ProductSubcategoryResource extends Resource
                         ->searchable()
                         ->required()
                         ->columnSpanFull(),
-                    FileUpload::make('image')->label('Görsel')->image()->disk('public')->visibility('public')->directory('product-subcategories')->columnSpanFull()
+                    FileUpload::make('image')->label('Görsel')->disk('public')->visibility('public')->directory('product-subcategories')->columnSpanFull()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->fetchFileInformation(false)
                         ->deletable()
                         ->openable()
@@ -126,6 +127,9 @@ class ProductSubcategoryResource extends Resource
                 ImageColumn::make('image')
                     ->label('Görsel')
                     ->disk('public')
+                    ->getStateUsing(fn (ProductSubcategory $record): ?string => $record->image && Storage::disk('public')->exists($record->image)
+                        ? $record->image
+                        : null)
                     ->defaultImageUrl(static::missingImagePreviewDataUri())
                     ->square(),
                 TextColumn::make('name')->label('Ad')->searchable()->sortable(),
@@ -165,6 +169,6 @@ class ProductSubcategoryResource extends Resource
 
     protected static function storagePreviewUrl(string $path): string
     {
-        return '/storage/'.ltrim($path, '/');
+        return Storage::disk('public')->url(ltrim($path, '/'));
     }
 }

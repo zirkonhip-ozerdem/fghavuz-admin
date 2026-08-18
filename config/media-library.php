@@ -46,7 +46,7 @@ return [
 
     'default_loading_attribute_value' => null,
     'prefix' => '',
-    'generate_thumbnails_for_temporary_uploads' => true,
+    'generate_thumbnails_for_temporary_uploads' => env('MEDIA_GENERATE_TEMPORARY_THUMBNAILS', false),
 
     'remote' => [
         'extra_headers' => [

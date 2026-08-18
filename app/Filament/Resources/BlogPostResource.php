@@ -56,7 +56,8 @@ class BlogPostResource extends Resource
                         ->required()
                         ->columnSpanFull(),
                     TextInput::make('author_name')->label('Yazar')->default('Admin Fatih Gül'),
-                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('blog/cover')->columnSpanFull()
+                    FileUpload::make('cover_image')->label('Kapak Görseli')->directory('blog/cover')->columnSpanFull()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->helperText('JPG, PNG veya WEBP yükleyin. Önerilen en-boy oranı 16:9. Maksimum dosya boyutu: 5 MB.')
                         ->live()

@@ -69,7 +69,8 @@ class ReferenceProjectResource extends Resource
             Section::make('Ortak Bilgiler')
                 ->columns(2)
                 ->schema([
-                    FileUpload::make('image')->label('Görsel')->image()->directory('references')->columnSpanFull()
+                    FileUpload::make('image')->label('Görsel')->directory('references')->columnSpanFull()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->helperText('JPG, PNG veya WEBP yükleyin. Maksimum dosya boyutu: 5 MB.')
                         ->live()

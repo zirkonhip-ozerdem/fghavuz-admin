@@ -93,7 +93,8 @@ class CorporateResource extends Resource
                     FileUpload::make('video_media')->label('Video Dosyası')->directory('corporate/video')->acceptedFileTypes(['video/mp4'])
                         ->maxSize((int) env('MEDIA_MAX_DOCUMENT_SIZE', 20480))
                         ->helperText('Sadece MP4 formatında. Maksimum dosya boyutu: 20 MB. Büyük videolar için Video URL alanını kullanmanız önerilir.'),
-                    FileUpload::make('image')->label('Görsel')->image()->directory('corporate')->columnSpanFull()
+                    FileUpload::make('image')->label('Görsel')->directory('corporate')->columnSpanFull()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->helperText('JPG, PNG veya WEBP yükleyin. Maksimum dosya boyutu: 5 MB.')
                         ->live()

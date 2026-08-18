@@ -62,6 +62,14 @@ class Product extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        if (! extension_loaded('gd') && ! extension_loaded('imagick')) {
+            return;
+        }
+
+        if ($media && ! str_starts_with((string) $media->mime_type, 'image/')) {
+            return;
+        }
+
         $this->addMediaConversion('thumb')
             ->width(400)
             ->height(400)

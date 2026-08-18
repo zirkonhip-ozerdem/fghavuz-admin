@@ -105,7 +105,8 @@ class ProductResource extends Resource
                 ->schema([
                     TextInput::make('series')->label('Seri'),
                     TextInput::make('sku')->label('SKU / Stok Kodu'),
-                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->disk('public')->visibility('public')->directory('products/cover')->columnSpanFull()
+                    FileUpload::make('cover_image')->label('Kapak Görseli')->disk('public')->visibility('public')->directory('products/cover')->columnSpanFull()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->fetchFileInformation(false)
                         ->deletable()
                         ->openable()
@@ -114,6 +115,7 @@ class ProductResource extends Resource
                         ->imagePreviewHeight('180')
                         ->panelLayout('grid')
                         ->deleteUploadedFileUsing(fn (string $file) => Storage::disk('public')->delete($file))
+                        ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->getUploadedFileUsing(static function (string $file): ?array {
                             $disk = Storage::disk('public');
                             $exists = $disk->exists($file);
@@ -134,7 +136,7 @@ class ProductResource extends Resource
                         ->label('Galeri Görselleri')
                         ->collection('gallery')
                         ->multiple()
-                        ->image()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->reorderable()
                         ->deletable()
                         ->openable()
@@ -180,6 +182,10 @@ class ProductResource extends Resource
                             'application/vnd.ms-excel',
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         ])
+                        ->previewable(false)
+                        ->openable()
+                        ->downloadable()
+                        ->deletable()
                         ->appendFiles()
                         ->helperText('PDF, Word veya Excel dosyası yükleyebilirsiniz (birden fazla seçilebilir). Önerilen maksimum dosya boyutu: 20 MB.'),
                 ]),
@@ -219,6 +225,9 @@ class ProductResource extends Resource
                 ImageColumn::make('cover_image')
                     ->label('Görsel')
                     ->disk('public')
+                    ->getStateUsing(fn (Product $record): ?string => $record->cover_image && Storage::disk('public')->exists($record->cover_image)
+                        ? $record->cover_image
+                        : null)
                     ->defaultImageUrl(static::missingImagePreviewDataUri())
                     ->square(),
                 TextColumn::make('title')->label('Başlık')->searchable()->sortable(),
@@ -261,6 +270,6 @@ class ProductResource extends Resource
 
     protected static function storagePreviewUrl(string $path): string
     {
-        return '/storage/'.ltrim($path, '/');
+        return Storage::disk('public')->url(ltrim($path, '/'));
     }
 }

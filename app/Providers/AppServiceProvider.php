@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
             'livewire.temporary_file_upload.disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK', 'local'),
             'livewire.temporary_file_upload.rules' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_RULES', 'required|file'),
             'livewire.temporary_file_upload.directory' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DIRECTORY', 'livewire-tmp'),
+            'media-library.generate_thumbnails_for_temporary_uploads' => false,
         ]);
     }
 
