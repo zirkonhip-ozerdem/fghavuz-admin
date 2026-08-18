@@ -2,13 +2,13 @@
 
 FGPOOL / Poolux kurumsal web sitesi için Laravel tabanlı API-first backend ve Filament admin panel. Next.js frontend'e JSON API sağlar; içerik yönetimi Filament admin panel üzerinden yapılır. Çok dilli yapı (tr / en / ar), öncelik Türkçe içerik.
 
-> **Not:** Bu proje bu oturumda bir sandbox ortamında (PHP/Composer kurulu değil, ağ erişimi kısıtlı) elle yazıldı; `composer install` hiç çalıştırılamadı. Aşağıdaki kurulum adımlarını kendi makinenizde çalıştırıp `composer install` sonrası oluşabilecek küçük sürüm uyumsuzluklarını (Laravel/Filament/Spatie paket sürümleri) gidermeniz gerekebilir.
+> **Not:** Proje PHP 8.3 ile çalışacak şekilde kilitlenmiştir. Composer bağımlılıklarını kurmadan önce `intl`, `zip` ve `exif` PHP eklentilerinin aktif olduğundan emin olun.
 
 ## Teknoloji Yığını
 
 - Laravel 12 (PHP ^8.3)
 - PostgreSQL
-- Filament 3 (admin panel) + `filament/spatie-laravel-translatable-plugin` + `filament/spatie-laravel-media-library-plugin`
+- Filament 3 (admin panel) + özel TR/EN/AR sekmeli formlar + `filament/spatie-laravel-media-library-plugin`
 - Laravel Sanctum (panel oturumu `web` guard ile session tabanlı; Sanctum SPA/token altyapısı ileride headless entegrasyon için hazır — `/api/v1/me`)
 - Spatie Laravel Permission (rol/yetki)
 - Spatie Media Library (ürün galeri/doküman yönetimi)
@@ -64,6 +64,7 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 Railway backend:
 
 ```env
+RAILPACK_PHP_EXTENSIONS=intl,zip,exif
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://RAILWAY-BACKEND-DOMAIN
@@ -116,7 +117,7 @@ routes/
 
 ## Çok Dilli Yapı
 
-İçerik alanları (`title`, `description`, `name`, vb.) veritabanında JSON/JSONB kolon olarak tutulur: `{"tr": "...", "en": "...", "ar": "..."}` — `spatie/laravel-translatable` ile yönetilir. Admin panelde `filament/spatie-laravel-translatable-plugin` sayesinde her formda dil değiştirici (üstte bayrak/dil seçici) bulunur. Public API `?locale=tr|en|ar` query parametresi ile istenen dili döner (`SetApiLocale` middleware, varsayılan `tr`, `.env` → `ACTIVE_LOCALES`).
+İçerik alanları (`title`, `description`, `name`, vb.) veritabanında JSON/JSONB kolon olarak tutulur: `{"tr": "...", "en": "...", "ar": "..."}` — `spatie/laravel-translatable` ile yönetilir. Admin panelde formlar özel TR/EN/AR sekmeleriyle düzenlenir. Public API `?locale=tr|en|ar` query parametresi ile istenen dili döner (`SetApiLocale` middleware, varsayılan `tr`, `.env` → `ACTIVE_LOCALES`).
 
 SEO alanları (`seo_title`, `seo_description`, `seo_keywords`, `og_title`, `og_description`) da çok dillidir; `canonical_url`, `og_image`, `robots` dile bağlı değildir.
 

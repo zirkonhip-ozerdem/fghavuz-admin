@@ -77,10 +77,9 @@ class ProductCategoryResource extends Resource
                         ->helperText('JPG, PNG veya WEBP yükleyin. Maksimum dosya boyutu: 5 MB.'),
                 ]),
             Section::make('Yayın')
-                ->columns(3)
+                ->columns(2)
                 ->schema([
                     Toggle::make('is_active')->label('Aktif')->default(true),
-                    Toggle::make('is_featured')->label('Öne Çıkan'),
                     TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
             Section::make('SEO - Ortak Alanlar')
@@ -100,14 +99,12 @@ class ProductCategoryResource extends Resource
                 TextColumn::make('name')->label('Ad')->searchable()->sortable(),
                 TextColumn::make('subcategories_count')->label('Alt Kategori')->counts('subcategories'),
                 TextColumn::make('products_count')->label('Ürün')->counts('products'),
-                IconColumn::make('is_featured')->label('Öne Çıkan')->boolean(),
                 IconColumn::make('is_active')->label('Aktif')->boolean(),
                 TextColumn::make('sort_order')->label('Sıra')->sortable(),
             ])
             ->defaultSort('sort_order')
             ->filters([
                 TernaryFilter::make('is_active')->label('Aktif mi?'),
-                TernaryFilter::make('is_featured')->label('Öne Çıkan mı?'),
             ])
             ->reorderable('sort_order');
     }

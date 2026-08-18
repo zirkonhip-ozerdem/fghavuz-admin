@@ -73,16 +73,12 @@ class ProductController extends Controller
 
     /**
      * GET /api/v1/home/featured-products
-     * Ana sayfa "Öne Çıkan Ürünlerimiz" bölümü: featured kategoriler + featured ürünler.
+     * Ana sayfa "Öne Çıkan Ürünlerimiz" bölümü: featured ürünler.
      */
     public function featured(): JsonResponse
     {
-        $categories = \App\Models\ProductCategory::query()->active()->featured()->ordered()->get();
         $products = Product::query()->active()->featured()->ordered()->with(['category', 'subcategory'])->limit(12)->get();
 
-        return $this->success([
-            'featured_categories' => \App\Http\Resources\Api\ProductCategoryResource::collection($categories),
-            'featured_products' => ProductResource::collection($products),
-        ]);
+        return $this->success(ProductResource::collection($products));
     }
 }

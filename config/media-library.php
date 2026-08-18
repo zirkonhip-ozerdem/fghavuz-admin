@@ -29,8 +29,9 @@ return [
     'ffmpeg_path' => env('FFMPEG_PATH', '/usr/bin/ffmpeg'),
     'ffprobe_path' => env('FFPROBE_PATH', '/usr/bin/ffprobe'),
 
-    'path_generator' => null,
-    'url_generator' => null,
+    'path_generator' => Spatie\MediaLibrary\Support\PathGenerator\DefaultPathGenerator::class,
+    'custom_path_generators' => [],
+    'url_generator' => Spatie\MediaLibrary\Support\UrlGenerator\DefaultUrlGenerator::class,
 
     'moves_media_on_update' => false,
     'version_urls' => false,

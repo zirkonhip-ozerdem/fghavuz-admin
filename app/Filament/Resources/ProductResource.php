@@ -27,6 +27,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProductResource extends Resource
 {
@@ -103,7 +105,26 @@ class ProductResource extends Resource
                 ->schema([
                     TextInput::make('series')->label('Seri'),
                     TextInput::make('sku')->label('SKU / Stok Kodu'),
-                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('products/cover')->columnSpanFull()
+                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->disk('public')->visibility('public')->directory('products/cover')->columnSpanFull()
+                        ->fetchFileInformation(false)
+                        ->deletable()
+                        ->openable()
+                        ->downloadable()
+                        ->previewable()
+                        ->imagePreviewHeight('180')
+                        ->panelLayout('grid')
+                        ->deleteUploadedFileUsing(fn (string $file) => Storage::disk('public')->delete($file))
+                        ->getUploadedFileUsing(static function (string $file): ?array {
+                            $disk = Storage::disk('public');
+                            $exists = $disk->exists($file);
+
+                            return [
+                                'name' => basename($file),
+                                'size' => $exists ? $disk->size($file) : 0,
+                                'type' => $exists ? $disk->mimeType($file) : 'image/svg+xml',
+                                'url' => $exists ? static::storagePreviewUrl($file) : static::missingImagePreviewDataUri(),
+                            ];
+                        })
                         ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->helperText('JPG, PNG veya WEBP yükleyin. Ürün listelerinde ve kartlarda görünecek ana görsel. Maksimum dosya boyutu: 5 MB.'),
                 ]),
@@ -116,7 +137,39 @@ class ProductResource extends Resource
                         ->multiple()
                         ->image()
                         ->reorderable()
+                        ->deletable()
+                        ->openable()
+                        ->downloadable()
+                        ->previewable()
+                        ->imagePreviewHeight('180')
+                        ->panelLayout('grid')
                         ->appendFiles()
+                        ->getUploadedFileUsing(static function (SpatieMediaLibraryFileUpload $component, string $file): ?array {
+                            if (! $record = $component->getRecord()) {
+                                return null;
+                            }
+
+                            /** @var ?Media $media */
+                            $media = $record->load('media')->getRelationValue('media')->firstWhere('uuid', $file);
+
+                            if (! $media) {
+                                return [
+                                    'name' => 'Eksik galeri gorseli',
+                                    'size' => 0,
+                                    'type' => 'image/svg+xml',
+                                    'url' => static::missingImagePreviewDataUri(),
+                                ];
+                            }
+
+                            $exists = Storage::disk($media->disk)->exists($media->getPathRelativeToRoot());
+
+                            return [
+                                'name' => $media->getAttributeValue('name') ?? $media->getAttributeValue('file_name'),
+                                'size' => $media->getAttributeValue('size') ?? 0,
+                                'type' => $exists ? $media->getAttributeValue('mime_type') : 'image/svg+xml',
+                                'url' => $exists ? static::storagePreviewUrl($media->getPathRelativeToRoot()) : static::missingImagePreviewDataUri(),
+                            ];
+                        })
                         ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->helperText('Birden fazla görsel seçebilirsiniz (JPG, PNG, WEBP). Sürükleyerek sıralayabilirsiniz. Her dosya en fazla 5 MB.'),
                     SpatieMediaLibraryFileUpload::make('documents')
@@ -196,5 +249,17 @@ class ProductResource extends Resource
     public static function canViewAny(): bool
     {
         return auth()->user()?->can(Permissions::MANAGE_PRODUCTS) ?? false;
+    }
+
+    protected static function missingImagePreviewDataUri(): string
+    {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"><rect width="640" height="360" fill="#f3f4f6"/><path d="M272 126h96a24 24 0 0 1 24 24v60a24 24 0 0 1-24 24h-96a24 24 0 0 1-24-24v-60a24 24 0 0 1 24-24zm14 84h68l-20-26-16 20-12-14-20 20z" fill="#9ca3af"/><text x="320" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#6b7280">Dosya bulunamadi</text></svg>';
+
+        return 'data:image/svg+xml;utf8,'.rawurlencode($svg);
+    }
+
+    protected static function storagePreviewUrl(string $path): string
+    {
+        return '/storage/'.ltrim($path, '/');
     }
 }
