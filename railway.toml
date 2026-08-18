@@ -3,7 +3,7 @@ builder = "railpack"
 buildCommand = "composer install --optimize-autoloader --no-dev --no-scripts --no-interaction"
 
 [deploy]
-preDeployCommand = ["php artisan migrate --force && php artisan db:seed --class=AdminUserSeeder --force"]
+preDeployCommand = ["php artisan deploy:prepare"]
 startCommand = "php artisan serve --host=0.0.0.0 --port=$PORT"
 healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 300
