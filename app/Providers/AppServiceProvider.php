@@ -17,7 +17,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        config([
+            'livewire.temporary_file_upload.disk' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DISK', 'local'),
+            'livewire.temporary_file_upload.rules' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_RULES', 'required|file'),
+            'livewire.temporary_file_upload.directory' => env('LIVEWIRE_TEMPORARY_FILE_UPLOAD_DIRECTORY', 'livewire-tmp'),
+        ]);
     }
 
     /**

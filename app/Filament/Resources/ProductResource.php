@@ -125,8 +125,7 @@ class ProductResource extends Resource
                                 'url' => $exists ? static::storagePreviewUrl($file) : static::missingImagePreviewDataUri(),
                             ];
                         })
-                        ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
-                        ->helperText('JPG, PNG veya WEBP yükleyin. Ürün listelerinde ve kartlarda görünecek ana görsel. Maksimum dosya boyutu: 5 MB.'),
+                        ->helperText('JPG, PNG veya WEBP yükleyin. Ürün listelerinde ve kartlarda görünecek ana görsel. Önerilen maksimum dosya boyutu: 5 MB.'),
                 ]),
             Section::make('Galeri ve Dokümanlar')
                 ->columns(1)
@@ -170,8 +169,7 @@ class ProductResource extends Resource
                                 'url' => $exists ? static::storagePreviewUrl($media->getPathRelativeToRoot()) : static::missingImagePreviewDataUri(),
                             ];
                         })
-                        ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
-                        ->helperText('Birden fazla görsel seçebilirsiniz (JPG, PNG, WEBP). Sürükleyerek sıralayabilirsiniz. Her dosya en fazla 5 MB.'),
+                        ->helperText('Birden fazla görsel seçebilirsiniz (JPG, PNG, WEBP). Sürükleyerek sıralayabilirsiniz. Önerilen maksimum dosya boyutu: 5 MB.'),
                     SpatieMediaLibraryFileUpload::make('documents')
                         ->label('Dokümanlar (PDF, DOC, XLS)')
                         ->collection('documents')
@@ -183,8 +181,7 @@ class ProductResource extends Resource
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         ])
                         ->appendFiles()
-                        ->maxSize((int) env('MEDIA_MAX_DOCUMENT_SIZE', 20480))
-                        ->helperText('PDF, Word veya Excel dosyası yükleyebilirsiniz (birden fazla seçilebilir). Her dosya en fazla 20 MB.'),
+                        ->helperText('PDF, Word veya Excel dosyası yükleyebilirsiniz (birden fazla seçilebilir). Önerilen maksimum dosya boyutu: 20 MB.'),
                 ]),
             Section::make('Özellikler ve Teknik Değerler')
                 ->schema([
