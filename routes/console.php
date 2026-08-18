@@ -16,8 +16,17 @@ Artisan::command('deploy:prepare', function () {
         return $migrateStatus;
     }
 
+    $roleStatus = $this->call('db:seed', [
+        '--class' => \Database\Seeders\RolePermissionSeeder::class,
+        '--force' => true,
+    ]);
+
+    if ($roleStatus !== 0) {
+        return $roleStatus;
+    }
+
     return $this->call('db:seed', [
         '--class' => \Database\Seeders\AdminUserSeeder::class,
         '--force' => true,
     ]);
-})->purpose('Run production migrations and refresh the seeded admin user');
+})->purpose('Run production migrations, roles, and refresh the seeded admin user');
