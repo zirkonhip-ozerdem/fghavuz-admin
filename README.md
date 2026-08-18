@@ -82,6 +82,12 @@ NEXT_PUBLIC_API_BASE_URL=https://RAILWAY-BACKEND-DOMAIN/api/v1
 NEXT_PUBLIC_BACKEND_URL=https://RAILWAY-BACKEND-DOMAIN
 ```
 
+Railway ilk deploy veya migration değişikliklerinden sonra:
+
+```bash
+php artisan migrate --force
+```
+
 İlk bağlantı testi için `/api/v1/health`, içerik testi için `/api/v1/site-settings?locale=tr` kullanılabilir.
 
 Test için (PostgreSQL test veritabanı gerekir, bkz. `phpunit.xml`):
