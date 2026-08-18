@@ -20,6 +20,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 
 class ProductCategoryResource extends Resource
 {
@@ -72,7 +73,26 @@ class ProductCategoryResource extends Resource
                 ->columns(2)
                 ->schema([
                     TextInput::make('icon')->label('İkon (opsiyonel)'),
-                    FileUpload::make('image')->label('Görsel')->image()->directory('product-categories')->columnSpanFull()
+                    FileUpload::make('image')->label('Görsel')->image()->disk('public')->visibility('public')->directory('product-categories')->columnSpanFull()
+                        ->fetchFileInformation(false)
+                        ->deletable()
+                        ->openable()
+                        ->downloadable()
+                        ->previewable()
+                        ->imagePreviewHeight('180')
+                        ->panelLayout('grid')
+                        ->deleteUploadedFileUsing(fn (string $file) => Storage::disk('public')->delete($file))
+                        ->getUploadedFileUsing(static function (string $file): ?array {
+                            $disk = Storage::disk('public');
+                            $exists = $disk->exists($file);
+
+                            return [
+                                'name' => basename($file),
+                                'size' => $exists ? $disk->size($file) : 0,
+                                'type' => $exists ? $disk->mimeType($file) : 'image/svg+xml',
+                                'url' => $exists ? static::storagePreviewUrl($file) : static::missingImagePreviewDataUri(),
+                            ];
+                        })
                         ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->helperText('JPG, PNG veya WEBP yükleyin. Maksimum dosya boyutu: 5 MB.'),
                 ]),
@@ -95,7 +115,12 @@ class ProductCategoryResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('image')->label('Görsel')->square(),
+                ImageColumn::make('image')
+                    ->label('Görsel')
+                    ->getStateUsing(static fn (ProductCategory $record): string => $record->image && Storage::disk('public')->exists($record->image)
+                        ? static::storagePreviewUrl($record->image)
+                        : static::missingImagePreviewDataUri())
+                    ->square(),
                 TextColumn::make('name')->label('Ad')->searchable()->sortable(),
                 TextColumn::make('subcategories_count')->label('Alt Kategori')->counts('subcategories'),
                 TextColumn::make('products_count')->label('Ürün')->counts('products'),
@@ -121,5 +146,17 @@ class ProductCategoryResource extends Resource
     public static function canViewAny(): bool
     {
         return auth()->user()?->can(Permissions::MANAGE_PRODUCTS) ?? false;
+    }
+
+    protected static function missingImagePreviewDataUri(): string
+    {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320"><rect width="320" height="320" fill="#f3f4f6"/><path d="M112 106h96a18 18 0 0 1 18 18v72a18 18 0 0 1-18 18h-96a18 18 0 0 1-18-18v-72a18 18 0 0 1 18-18zm12 84h72l-22-28-18 22-13-15-19 21z" fill="#9ca3af"/><text x="160" y="246" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#6b7280">Dosya bulunamadi</text></svg>';
+
+        return 'data:image/svg+xml;utf8,'.rawurlencode($svg);
+    }
+
+    protected static function storagePreviewUrl(string $path): string
+    {
+        return '/storage/'.ltrim($path, '/');
     }
 }
