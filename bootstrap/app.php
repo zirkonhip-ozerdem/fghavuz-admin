@@ -21,6 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
             SetApiLocale::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'api/v1/contact/messages',
+            'api/v1/quote-requests',
+        ]);
+
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
