@@ -19,6 +19,10 @@ return new class extends Migration
 
     public function up(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         foreach ($this->tables as $table) {
             DB::statement("ALTER TABLE {$table} DROP CONSTRAINT IF EXISTS {$table}_slug_unique");
             DB::statement("ALTER TABLE {$table} ALTER COLUMN slug TYPE jsonb USING jsonb_build_object('tr', slug)");
@@ -27,6 +31,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         foreach ($this->tables as $table) {
             DB::statement("ALTER TABLE {$table} ALTER COLUMN slug TYPE varchar(255) USING (slug->>'tr')");
             DB::statement("ALTER TABLE {$table} ADD CONSTRAINT {$table}_slug_unique UNIQUE (slug)");

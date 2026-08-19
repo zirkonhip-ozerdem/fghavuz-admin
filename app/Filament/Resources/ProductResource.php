@@ -27,6 +27,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
@@ -61,7 +64,7 @@ class ProductResource extends Resource
                         ->afterStateUpdated(fn ($set) => $set('product_subcategory_id', null)),
                     Select::make('product_subcategory_id')
                         ->label('Alt Kategori')
-                        ->options(function ($get) {
+                        ->options(function (\Filament\Forms\Get $get) {
                             $categoryId = $get('product_category_id');
 
                             return $categoryId
@@ -96,8 +99,8 @@ class ProductResource extends Resource
                                             ->collapsed()
                                             ->schema(Product::translatableSeoFormSchema($locale)),
                                     ]))
-                                ->values()
-                                ->all()
+                            ->values()
+                            ->all()
                         ),
                 ]),
             Section::make('Ortak Bilgiler')
