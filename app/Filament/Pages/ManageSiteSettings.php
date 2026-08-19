@@ -63,9 +63,11 @@ class ManageSiteSettings extends Page implements HasForms
                     TextInput::make('site_name')->label('Site Adı')->required(),
                     TextInput::make('copyright_text')->label('Copyright Metni'),
                     FileUpload::make('logo')->label('Logo')->image()->directory('site/branding')
+                        ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                         ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->helperText('JPG, PNG veya WEBP yükleyin. Şeffaf arka planlı PNG önerilir. Maksimum dosya boyutu: 5 MB.'),
                     FileUpload::make('favicon')->label('Favicon')->image()->directory('site/branding')
+                        ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                         ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
                         ->helperText('Tarayıcı sekmesinde görünen küçük ikon. Kare (örn. 512x512) PNG önerilir. Maksimum dosya boyutu: 5 MB.'),
                 ]),

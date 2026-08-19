@@ -38,27 +38,80 @@ trait HasTranslatableTabs
      * dondurur. Sekmeler arasi hizli gecislerde canli bir sunucu istegi, henuz
      * gonderilmemis diger sekme verilerinin kaybolmasina yol acabildigi
      * icin slug uretimi kasitli olarak tamamen istemci tarafinda yapilir.
-     * Sadece kayit olustururken calisir; duzenlemede elle girilen slug
-     * uzerine yazilmaz.
+     *
+     * Kayit olustururken her zaman calisir. Duzenlemede ise SADECE slug hic
+     * elle degistirilmemisse (yani hala kayittaki basliktan otomatik
+     * uretilecek degerle birebir ayniysa) calismaya devam eder; slug elle
+     * ozellestirilmisse (yayindaki bir URL'i kirmamak icin) hic dokunulmaz.
+     * "\$el.dataset.slugBaseline" ile son senkronize edilen deger takip
+     * edilir: kullanici slug alanina dogrudan mudahale ederse (canli deger
+     * baseline'dan sapar) senkronizasyon o an icin sessizce durur.
      */
-    public static function slugGeneratorAttributes(string $locale, string $operation): array
+    public static function slugGeneratorAttributes(string $locale, string $operation, ?\Illuminate\Database\Eloquent\Model $record = null): array
     {
+        $initialSlug = '';
+
         if ($operation !== 'create') {
-            return [];
+            if ($record === null || ! method_exists($record, 'slugSourceField')) {
+                return [];
+            }
+
+            $sourceField = $record::slugSourceField();
+            $currentTitle = $record->getTranslation($sourceField, $locale, false) ?? '';
+            $currentSlug = $record->getTranslation('slug', $locale, false) ?? '';
+
+            // Slug bos degil ve otomatik uretilecek degerden farkliysa, elle
+            // ozellestirilmis demektir: JS hic baglanmaz, dokunulmaz.
+            if ($currentSlug !== '' && $currentSlug !== static::computeSlug($currentTitle, $locale)) {
+                return [];
+            }
+
+            $initialSlug = $currentSlug;
         }
+
+        // Arapca harf donusumu Latin'e cevirmez (native script korunur): "a-z0-9"
+        // yerine Arapca Unicode blogu (U+0600-U+06FF) da gecerli kabul edilir.
+        // Aksi halde Latin transliterasyonu okunaksiz sonuc verir (bkz. computeSlug()).
+        $charPattern = $locale === 'ar' ? '\\u0600-\\u06FF0-9' : 'a-z0-9';
+
+        $normalize = $locale === 'ar' ? '' : '.toLowerCase()
+                    .replace(/ç/g, \'c\').replace(/ğ/g, \'g\').replace(/ı/g, \'i\')
+                    .replace(/ö/g, \'o\').replace(/ş/g, \'s\').replace(/ü/g, \'u\')';
+
+        $initialSlugJs = addslashes($initialSlug);
 
         return [
             'x-on:blur' => <<<JS
-                \$wire.set('data.slug_{$locale}', \$el.value
-                    .toString()
-                    .toLowerCase()
-                    .replace(/ç/g, 'c').replace(/ğ/g, 'g').replace(/ı/g, 'i')
-                    .replace(/ö/g, 'o').replace(/ş/g, 's').replace(/ü/g, 'u')
-                    .trim()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-+|-+\$/g, ''), false)
+                (() => {
+                    const newSlug = \$el.value
+                        .toString(){$normalize}
+                        .trim()
+                        .replace(/[^{$charPattern}]+/g, '-')
+                        .replace(/^-+|-+\$/g, '');
+                    const baseline = \$el.dataset.slugBaseline ?? '{$initialSlugJs}';
+                    const current = \$wire.get('data.slug_{$locale}');
+                    if (current === baseline) {
+                        \$wire.set('data.slug_{$locale}', newSlug, false);
+                        \$el.dataset.slugBaseline = newSlug;
+                    }
+                })()
                 JS,
         ];
+    }
+
+    /**
+     * slugGeneratorAttributes (JS) ve packTranslatableFields (PHP yedegi) ayni
+     * kurali paylasir: Arapca icin Latin transliterasyonu (Str::slug) okunaksiz
+     * sonuc uretir, bu yuzden native script korunur, sadece bosluk/noktalama
+     * tireye cevrilir. Diger diller icin standart Str::slug kullanilir.
+     */
+    public static function computeSlug(string $value, string $locale): string
+    {
+        if ($locale === 'ar') {
+            return trim(preg_replace('/[^\p{Arabic}0-9]+/u', '-', $value) ?? '', '-');
+        }
+
+        return \Illuminate\Support\Str::slug($value);
     }
 
     /**
@@ -139,7 +192,7 @@ trait HasTranslatableTabs
 
                     if ($value === '' && $field === 'slug' && method_exists($model, 'slugSourceField')) {
                         $sourceField = $model::slugSourceField();
-                        $value = \Illuminate\Support\Str::slug($original["{$sourceField}_{$locale}"] ?? '');
+                        $value = static::computeSlug($original["{$sourceField}_{$locale}"] ?? '', $locale);
                     }
 
                     return [$locale => $value];

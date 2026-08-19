@@ -50,7 +50,7 @@ class BlogCategoryResource extends Resource
                                             ->label('Ad')
                                             ->required()
                                             ->maxLength(150)
-                                            ->extraInputAttributes(fn (string $operation) => static::slugGeneratorAttributes($locale, $operation)),
+                                            ->extraInputAttributes(fn (string $operation, ?\Illuminate\Database\Eloquent\Model $record) => static::slugGeneratorAttributes($locale, $operation, $record)),
                                         TextInput::make("slug_{$locale}")
                                             ->label('Slug')
                                             ->maxLength(180)
