@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Api\BlogPostResource;
 use App\Http\Resources\Api\CatalogResource;
 use App\Http\Resources\Api\CorporateResource;
-use App\Http\Resources\Api\ProductCategoryResource;
 use App\Http\Resources\Api\ProductResource;
 use App\Http\Resources\Api\ReferenceProjectResource;
 use App\Http\Resources\Api\SeoPageResource;
@@ -15,7 +14,6 @@ use App\Models\BlogPost;
 use App\Models\Catalog;
 use App\Models\Corporate;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Models\ReferenceProject;
 use App\Models\SeoPage;
 use App\Models\SiteSetting;
@@ -40,9 +38,6 @@ class HomeController extends Controller
         return $this->success([
             'site_settings' => new SiteSettingResource(SiteSetting::current()),
             'corporate_highlight' => new CorporateResource(Corporate::current()),
-            'featured_product_categories' => ProductCategoryResource::collection(
-                ProductCategory::query()->active()->featured()->ordered()->get()
-            ),
             'featured_products' => ProductResource::collection(
                 Product::query()->active()->featured()->ordered()->with(['category', 'subcategory'])->limit(12)->get()
             ),

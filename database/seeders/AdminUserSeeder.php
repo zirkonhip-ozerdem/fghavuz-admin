@@ -13,7 +13,7 @@ class AdminUserSeeder extends Seeder
         $email = env('ADMIN_SEED_EMAIL', 'admin@fgpool.com');
         $password = env('ADMIN_SEED_PASSWORD', 'password');
 
-        $user = User::firstOrCreate(
+        $user = User::updateOrCreate(
             ['email' => $email],
             [
                 'name' => 'FGPOOL Admin',

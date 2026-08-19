@@ -6,18 +6,17 @@ use App\Support\Traits\HasActiveSortable;
 use App\Support\Traits\HasCentralizedSlug;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Sluggable\HasSlug;
 use Spatie\Translatable\HasTranslations;
 
 class ReferenceProject extends Model
 {
-    use HasActiveSortable, HasCentralizedSlug, HasSlug, HasTranslations, SoftDeletes;
+    use HasActiveSortable, HasCentralizedSlug, HasTranslations, SoftDeletes;
 
     protected $fillable = [
-        'title', 'slug', 'location', 'description', 'image', 'is_active', 'sort_order', 'is_featured',
+        'title', 'slug', 'location', 'description', 'image', 'image_alt', 'is_active', 'sort_order', 'is_featured',
     ];
 
-    public array $translatable = ['title', 'location', 'description'];
+    public array $translatable = ['title', 'slug', 'location', 'description', 'image_alt'];
 
     protected function casts(): array
     {

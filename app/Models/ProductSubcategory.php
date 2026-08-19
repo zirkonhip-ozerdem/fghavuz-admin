@@ -9,12 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Sluggable\HasSlug;
 use Spatie\Translatable\HasTranslations;
 
 class ProductSubcategory extends Model
 {
-    use HasActiveSortable, HasCentralizedSlug, HasSeoFields, HasSlug, HasTranslations, SoftDeletes;
+    use HasActiveSortable, HasCentralizedSlug, HasSeoFields, HasTranslations, SoftDeletes;
 
     protected $fillable = [
         'product_category_id', 'name', 'slug', 'description', 'image',
@@ -23,7 +22,7 @@ class ProductSubcategory extends Model
         'og_title', 'og_description', 'og_image', 'robots',
     ];
 
-    public array $translatable = ['name', 'description'];
+    public array $translatable = ['name', 'slug', 'description'];
 
     protected function casts(): array
     {

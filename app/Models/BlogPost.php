@@ -8,21 +8,20 @@ use App\Support\Traits\HasSeoFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Sluggable\HasSlug;
 use Spatie\Translatable\HasTranslations;
 
 class BlogPost extends Model
 {
-    use HasActiveSortable, HasCentralizedSlug, HasSeoFields, HasSlug, HasTranslations, SoftDeletes;
+    use HasActiveSortable, HasCentralizedSlug, HasSeoFields, HasTranslations, SoftDeletes;
 
     protected $fillable = [
-        'blog_category_id', 'title', 'slug', 'excerpt', 'content', 'cover_image',
+        'blog_category_id', 'title', 'slug', 'excerpt', 'content', 'cover_image', 'cover_image_alt',
         'author_name', 'published_at', 'reading_time', 'is_featured', 'is_active', 'sort_order',
         'seo_title', 'seo_description', 'seo_keywords', 'canonical_url',
         'og_title', 'og_description', 'og_image', 'robots',
     ];
 
-    public array $translatable = ['title', 'excerpt', 'content'];
+    public array $translatable = ['title', 'slug', 'excerpt', 'content', 'cover_image_alt'];
 
     protected function casts(): array
     {

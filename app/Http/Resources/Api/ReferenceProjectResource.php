@@ -21,6 +21,7 @@ class ReferenceProjectResource extends JsonResource
             'location' => $this->getTranslation('location', $locale, false),
             'description' => $this->getTranslation('description', $locale, false),
             'image' => $this->image ? asset('storage/'.$this->image) : null,
+            'image_alt' => $this->getTranslation('image_alt', $locale, false),
             'is_featured' => (bool) $this->is_featured,
         ];
     }

@@ -6,9 +6,10 @@ return [
     'allowed_methods' => ['*'],
 
     // Next.js frontend origin'leri .env -> CORS_ALLOWED_ORIGINS icinden okunur.
-    'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000'))),
+    'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', 'http://localhost:3000'))))),
 
-    'allowed_origins_patterns' => [],
+    // Vercel preview domainleri gibi pattern ihtiyaclari icin.
+    'allowed_origins_patterns' => array_values(array_filter(array_map('trim', explode(',', env('CORS_ALLOWED_ORIGIN_PATTERNS', ''))))),
 
     'allowed_headers' => ['*'],
 

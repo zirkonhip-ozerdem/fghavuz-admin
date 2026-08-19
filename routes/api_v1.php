@@ -24,6 +24,20 @@ use Illuminate\Support\Facades\Route;
 | SetApiLocale middleware'i (bkz. bootstrap/app.php) tarafindan saglanir.
 */
 
+Route::get('health', function () {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'app' => config('app.name'),
+            'environment' => app()->environment(),
+            'api' => 'v1',
+            'default_locale' => config('app.locale'),
+            'active_locales' => active_locales(),
+        ],
+        'message' => null,
+    ]);
+})->name('health');
+
 Route::get('locales', function () {
     return response()->json([
         'success' => true,

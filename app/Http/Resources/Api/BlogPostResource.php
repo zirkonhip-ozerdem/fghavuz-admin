@@ -22,6 +22,7 @@ class BlogPostResource extends JsonResource
             'excerpt' => $this->getTranslation('excerpt', $locale, false),
             'content' => $this->when($isDetail, fn () => $this->getTranslation('content', $locale, false)),
             'cover_image' => $this->cover_image ? asset('storage/'.$this->cover_image) : null,
+            'cover_image_alt' => $this->getTranslation('cover_image_alt', $locale, false),
             'author_name' => $this->author_name,
             'published_at' => $this->published_at?->toIso8601String(),
             'reading_time' => $this->reading_time,

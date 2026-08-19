@@ -7,17 +7,19 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductSubcategory;
 use App\Support\Permissions;
+use App\Support\Traits\HasTranslatableTabs;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Resources\Concerns\Translatable;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
@@ -28,10 +30,12 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProductResource extends Resource
 {
-    use Translatable;
+    use HasTranslatableTabs;
 
     protected static ?string $model = Product::class;
 
@@ -69,37 +73,64 @@ class ProductResource extends Resource
                         })
                         ->searchable(),
                 ]),
-            Section::make('İçerik')
+            Section::make('Dil Bazlı İçerik')
+                ->schema([
+                    Tabs::make('Diller')
+                        ->tabs(
+                            collect(self::locales())
+                                ->map(fn (string $label, string $locale) => Tab::make($locale)
+                                    ->label($label)
+                                    ->schema([
+                                        TextInput::make("title_{$locale}")
+                                            ->label('Başlık')
+                                            ->required()
+                                            ->maxLength(180)
+                                            ->extraInputAttributes(fn (string $operation) => static::slugGeneratorAttributes($locale, $operation)),
+                                        TextInput::make("slug_{$locale}")
+                                            ->label('Slug')
+                                            ->maxLength(200)
+                                            ->unique(table: Product::class, column: "slug->{$locale}", ignoreRecord: true)
+                                            ->helperText('Otomatik doldurulur, istenirse elle değiştirilebilir.'),
+                                        Textarea::make("short_description_{$locale}")->label('Kısa Açıklama')->rows(2),
+                                        Textarea::make("description_{$locale}")->label('Açıklama')->rows(5),
+                                        Textarea::make("technical_description_{$locale}")->label('Teknik Açıklama')->rows(5),
+                                        Section::make('SEO')
+                                            ->collapsible()
+                                            ->collapsed()
+                                            ->schema(Product::translatableSeoFormSchema($locale)),
+                                    ]))
+                            ->values()
+                            ->all()
+                        ),
+                ]),
+            Section::make('Ortak Bilgiler')
                 ->columns(2)
                 ->schema([
-                    TextInput::make('title')
-                        ->label('Başlık')
-                        ->required()
-                        ->maxLength(180)
-                        ->columnSpanFull()
-                        ->live(onBlur: true)
-                        ->afterStateUpdated(function (?string $operation, $state, \Filament\Forms\Set $set, \Filament\Forms\Get $get) {
-                            
-                            if ($operation === 'edit' && filled($get('slug'))) {
-                                return;
-                            }
-                            
-                            
-                            if ($state) {
-                                $set('slug', Str::slug($state));
-                            }
-                        }),
-                    TextInput::make('slug')
-                        ->label('Slug')
-                        ->maxLength(200)
-                        ->unique(ignoreRecord: true)
-                        ->helperText('Boş bırakılırsa başlıktan otomatik oluşturulur.'),
                     TextInput::make('series')->label('Seri'),
                     TextInput::make('sku')->label('SKU / Stok Kodu'),
-                    Textarea::make('short_description')->label('Kısa Açıklama')->rows(2)->columnSpanFull(),
-                    Textarea::make('description')->label('Açıklama')->rows(5)->columnSpanFull(),
-                    Textarea::make('technical_description')->label('Teknik Açıklama')->rows(5)->columnSpanFull(),
-                    FileUpload::make('cover_image')->label('Kapak Görseli')->image()->directory('products/cover')->columnSpanFull(),
+                    FileUpload::make('cover_image')->label('Kapak Görseli')->disk('public')->visibility('public')->directory('products/cover')->columnSpanFull()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                        ->fetchFileInformation(false)
+                        ->deletable()
+                        ->openable()
+                        ->downloadable()
+                        ->previewable()
+                        ->imagePreviewHeight('180')
+                        ->panelLayout('grid')
+                        ->deleteUploadedFileUsing(fn (string $file) => Storage::disk('public')->delete($file))
+                        ->maxSize((int) env('MEDIA_MAX_IMAGE_SIZE', 5120))
+                        ->getUploadedFileUsing(static function (string $file): ?array {
+                            $disk = Storage::disk('public');
+                            $exists = $disk->exists($file);
+
+                            return [
+                                'name' => basename($file),
+                                'size' => $exists ? $disk->size($file) : 0,
+                                'type' => $exists ? $disk->mimeType($file) : 'image/svg+xml',
+                                'url' => $exists ? static::storagePreviewUrl($file) : static::missingImagePreviewDataUri(),
+                            ];
+                        })
+                        ->helperText('JPG, PNG veya WEBP yükleyin. Ürün listelerinde ve kartlarda görünecek ana görsel. Önerilen maksimum dosya boyutu: 5 MB.'),
                 ]),
             Section::make('Galeri ve Dokümanlar')
                 ->columns(1)
@@ -108,9 +139,42 @@ class ProductResource extends Resource
                         ->label('Galeri Görselleri')
                         ->collection('gallery')
                         ->multiple()
-                        ->image()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->reorderable()
-                        ->appendFiles(),
+                        ->deletable()
+                        ->openable()
+                        ->downloadable()
+                        ->previewable()
+                        ->imagePreviewHeight('180')
+                        ->panelLayout('grid')
+                        ->appendFiles()
+                        ->getUploadedFileUsing(static function (SpatieMediaLibraryFileUpload $component, string $file): ?array {
+                            if (! $record = $component->getRecord()) {
+                                return null;
+                            }
+
+                            /** @var ?Media $media */
+                            $media = $record->load('media')->getRelationValue('media')->firstWhere('uuid', $file);
+
+                            if (! $media) {
+                                return [
+                                    'name' => 'Eksik galeri gorseli',
+                                    'size' => 0,
+                                    'type' => 'image/svg+xml',
+                                    'url' => static::missingImagePreviewDataUri(),
+                                ];
+                            }
+
+                            $exists = Storage::disk($media->disk)->exists($media->getPathRelativeToRoot());
+
+                            return [
+                                'name' => $media->getAttributeValue('name') ?? $media->getAttributeValue('file_name'),
+                                'size' => $media->getAttributeValue('size') ?? 0,
+                                'type' => $exists ? $media->getAttributeValue('mime_type') : 'image/svg+xml',
+                                'url' => $exists ? static::storagePreviewUrl($media->getPathRelativeToRoot()) : static::missingImagePreviewDataUri(),
+                            ];
+                        })
+                        ->helperText('Birden fazla görsel seçebilirsiniz (JPG, PNG, WEBP). Sürükleyerek sıralayabilirsiniz. Önerilen maksimum dosya boyutu: 5 MB.'),
                     SpatieMediaLibraryFileUpload::make('documents')
                         ->label('Dokümanlar (PDF, DOC, XLS)')
                         ->collection('documents')
@@ -121,7 +185,12 @@ class ProductResource extends Resource
                             'application/vnd.ms-excel',
                             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         ])
-                        ->appendFiles(),
+                        ->previewable(false)
+                        ->openable()
+                        ->downloadable()
+                        ->deletable()
+                        ->appendFiles()
+                        ->helperText('PDF, Word veya Excel dosyası yükleyebilirsiniz (birden fazla seçilebilir). Önerilen maksimum dosya boyutu: 20 MB.'),
                 ]),
             Section::make('Özellikler ve Teknik Değerler')
                 ->schema([
@@ -141,9 +210,14 @@ class ProductResource extends Resource
                 ->schema([
                     Toggle::make('is_active')->label('Aktif')->default(true),
                     Toggle::make('is_featured')->label('Öne Çıkan'),
-                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
+                    TextInput::make('sort_order')->label('Sıra')->numeric()->default(1),
                 ]),
-            ...Product::seoFormSchema(),
+            Section::make('SEO - Ortak Alanlar')
+                ->description('Dile bağlı olmayan SEO ayarları.')
+                ->collapsible()
+                ->collapsed()
+                ->columns(2)
+                ->schema(Product::nonTranslatableSeoFormSchema()),
         ]);
     }
 
@@ -151,7 +225,14 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('cover_image')->label('Görsel')->square(),
+                ImageColumn::make('cover_image')
+                    ->label('Görsel')
+                    ->disk('public')
+                    ->getStateUsing(fn (Product $record): ?string => $record->cover_image && Storage::disk('public')->exists($record->cover_image)
+                        ? $record->cover_image
+                        : null)
+                    ->defaultImageUrl(static::missingImagePreviewDataUri())
+                    ->square(),
                 TextColumn::make('title')->label('Başlık')->searchable()->sortable(),
                 TextColumn::make('category.name')->label('Kategori')->sortable(),
                 TextColumn::make('subcategory.name')->label('Alt Kategori'),
@@ -169,11 +250,6 @@ class ProductResource extends Resource
             ]);
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->withoutGlobalScopes([SoftDeletingScope::class]);
-    }
-
     public static function getPages(): array
     {
         return [
@@ -186,5 +262,17 @@ class ProductResource extends Resource
     public static function canViewAny(): bool
     {
         return auth()->user()?->can(Permissions::MANAGE_PRODUCTS) ?? false;
+    }
+
+    protected static function missingImagePreviewDataUri(): string
+    {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"><rect width="640" height="360" fill="#f3f4f6"/><path d="M272 126h96a24 24 0 0 1 24 24v60a24 24 0 0 1-24 24h-96a24 24 0 0 1-24-24v-60a24 24 0 0 1 24-24zm14 84h68l-20-26-16 20-12-14-20 20z" fill="#9ca3af"/><text x="320" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#6b7280">Dosya bulunamadi</text></svg>';
+
+        return 'data:image/svg+xml;utf8,'.rawurlencode($svg);
+    }
+
+    protected static function storagePreviewUrl(string $path): string
+    {
+        return Storage::disk('public')->url(ltrim($path, '/'));
     }
 }

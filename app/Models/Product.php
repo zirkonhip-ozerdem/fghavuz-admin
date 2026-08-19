@@ -11,12 +11,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Spatie\Sluggable\HasSlug;
 use Spatie\Translatable\HasTranslations;
 
 class Product extends Model implements HasMedia
 {
-    use HasActiveSortable, HasCentralizedSlug, HasSeoFields, HasSlug, HasTranslations, InteractsWithMedia, SoftDeletes;
+    use HasActiveSortable, HasCentralizedSlug, HasSeoFields, HasTranslations, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
         'product_category_id', 'product_subcategory_id',
@@ -27,7 +26,7 @@ class Product extends Model implements HasMedia
         'og_title', 'og_description', 'og_image', 'robots',
     ];
 
-    public array $translatable = ['title', 'short_description', 'description', 'technical_description'];
+    public array $translatable = ['title', 'slug', 'short_description', 'description', 'technical_description'];
 
     protected function casts(): array
     {
@@ -63,6 +62,14 @@ class Product extends Model implements HasMedia
 
     public function registerMediaConversions(?Media $media = null): void
     {
+        if (! extension_loaded('gd') && ! extension_loaded('imagick')) {
+            return;
+        }
+
+        if ($media && ! str_starts_with((string) $media->mime_type, 'image/')) {
+            return;
+        }
+
         $this->addMediaConversion('thumb')
             ->width(400)
             ->height(400)

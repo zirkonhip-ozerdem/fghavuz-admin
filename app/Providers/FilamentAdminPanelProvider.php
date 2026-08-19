@@ -8,7 +8,6 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\SpatieLaravelTranslatablePlugin;
 use Filament\Support\Colors\Color;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -26,7 +25,8 @@ class FilamentAdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path(env('FILAMENT_PATH', 'admin'))
             ->login()
-            ->brandName('FGPOOL / Poolux Admin')
+            ->brandLogo(asset('img/logo.png'))
+            ->brandLogoHeight('1.75rem')
             ->colors([
                 'primary' => Color::hex('#0f6fa3'),
             ])
@@ -38,10 +38,6 @@ class FilamentAdminPanelProvider extends PanelProvider
                 'Ürün Kataloğu',
                 'Talepler',
                 'Sistem',
-            ])
-            ->plugins([
-                SpatieLaravelTranslatablePlugin::make()
-                    ->defaultLocales(config('app.available_locales', ['tr', 'en', 'ar'])),
             ])
             ->middleware([
                 EncryptCookies::class,

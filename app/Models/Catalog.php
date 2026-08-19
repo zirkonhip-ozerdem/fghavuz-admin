@@ -8,12 +8,11 @@ use App\Support\Traits\HasSeoFields;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Sluggable\HasSlug;
 use Spatie\Translatable\HasTranslations;
 
 class Catalog extends Model
 {
-    use HasActiveSortable, HasCentralizedSlug, HasSeoFields, HasSlug, HasTranslations, SoftDeletes;
+    use HasActiveSortable, HasCentralizedSlug, HasSeoFields, HasTranslations, SoftDeletes;
 
     protected $fillable = [
         'title', 'slug', 'description', 'file', 'cover_image', 'file_type', 'file_size',
@@ -22,7 +21,7 @@ class Catalog extends Model
         'og_title', 'og_description', 'og_image', 'robots',
     ];
 
-    public array $translatable = ['title', 'description'];
+    public array $translatable = ['title', 'slug', 'description'];
 
     protected function casts(): array
     {

@@ -1,0 +1,10 @@
+[build]
+builder = "railpack"
+buildCommand = "composer install --optimize-autoloader --no-dev --no-scripts --no-interaction && php artisan storage:link --force"
+
+[deploy]
+preDeployCommand = ["php artisan deploy:prepare"]
+startCommand = "mkdir -p storage/app/livewire-tmp storage/app/public && php artisan storage:link --force && php artisan serve --host=0.0.0.0 --port=$PORT"
+healthcheckPath = "/api/v1/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"

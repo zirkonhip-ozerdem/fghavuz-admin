@@ -27,7 +27,7 @@ class ProductResource extends JsonResource
             'gallery' => $this->when($request->routeIs('*.products.show'), fn () => $this->getMedia('gallery')->map(fn ($media) => [
                 'id' => $media->id,
                 'url' => $media->getUrl(),
-                'thumb' => $media->getUrl('thumb'),
+                'thumb' => $media->hasGeneratedConversion('thumb') ? $media->getUrl('thumb') : $media->getUrl(),
                 'alt' => $media->getCustomProperty('alt.'.$locale, $media->name),
                 'order' => $media->order_column,
             ])),

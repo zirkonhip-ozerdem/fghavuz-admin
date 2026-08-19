@@ -32,7 +32,6 @@ class SiteSettingResource extends JsonResource
             ],
             'default_locale' => $this->default_locale,
             'active_locales' => $this->active_locales,
-            'maintenance_mode' => (bool) $this->maintenance_mode,
             'footer_text' => $this->getTranslation('footer_text', $locale, false),
             'copyright_text' => $this->copyright_text,
             'yengec_yazilim_url' => $this->yengec_yazilim_url,
