@@ -171,6 +171,26 @@ Tüm cevaplar `{ "success": bool, "data": ..., "message": string|null }` zarfın
 
 Admin panel (`/admin`) tüm CRUD işlemlerini Filament üzerinden yapar; ayrı bir admin API yoktur.
 
+## Excel Ürün Kataloğu Aktarımı
+
+`Ürünler` sayfasındaki kolonlar: `Ana Kategori`, `Alt Kategori`, `Ürün Adı`,
+`Açıklama / Ürün Detayı`, `Teknik Bilgiler`, `Kod / Fiyat / Seçenekler`, `Katalog Sayfası`.
+
+```bash
+# Önizleme (kayıt yazmaz)
+php artisan products:import-catalog /path/to/catalog.xlsx
+# Ana kategori, alt kategori ve pasif ürün kayıtlarını ekle
+php artisan products:import-catalog /path/to/catalog.xlsx --apply
+```
+
+Mevcut kayıtlar, çeviriler ve görseller korunur. Aynı dosya tekrar aktarılırsa ürünler
+çoğaltılmaz. Aynı isimli ürünler farklı katalog sayfalarındaysa ayrı tutulur.
+Kod/fiyat seçenekleri teknik açıklamaya ve teknik özelliklere kaydedilir; tek bir
+varyant kodu SKU olarak atanmaz. Yalnızca Türkçe içerik aktarılır. Yeni ürünleri
+panelde kontrol edip görsel ve çevirilerini tamamladıktan sonra aktif edin.
+Aktarım öncesi kayıt yedekleri `storage/app/catalog-import-backups/` altında tutulur
+ve Git'e dahil edilmez. Veritabanı bağlantısı çalıştırılan ortamın `.env` ayarlarından alınır.
+
 ## Güvenlik
 
 - Panel erişimi `is_active=true` + en az bir rol gerektirir (`User::canAccessPanel`)

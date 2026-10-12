@@ -1,10 +1,12 @@
 /.phpunit.cache
+/.phpunit.result.cache
 /node_modules
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/catalog-import-backups
 /vendor
 .env
 .env.backup
