@@ -193,6 +193,10 @@ ve Git'e dahil edilmez. Veritabanı bağlantısı çalıştırılan ortamın `.e
 
 ## Güvenlik
 
+- Admin sayfaları ve kök yönlendirme `X-Robots-Tag: noindex, nofollow` döndürür;
+  panel HTML'inde de aynı robots meta etiketi bulunur. `robots.txt` bu sayfaların
+  taranmasına izin verir; Google'ın `noindex` kuralını okuyabilmesi için bu gereklidir.
+  Public API ve ürün görselleri bu kuralın dışındadır.
 - Panel erişimi `is_active=true` + en az bir rol gerektirir (`User::canAccessPanel`)
 - `contact-form`, `quote-form`, `login` için ayrı rate limiter (`AppServiceProvider::registerRateLimiters`)
 - Dosya yükleme: pdf, doc, docx, xls, xlsx, jpg, png; boyut `.env` → `MEDIA_MAX_DOCUMENT_SIZE` / `MEDIA_MAX_IMAGE_SIZE` (KB)
